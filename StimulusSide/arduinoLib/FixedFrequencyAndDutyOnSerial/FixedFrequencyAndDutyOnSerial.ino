@@ -16,14 +16,20 @@ void setup(){
   Serial.begin(9600);
   while(!Serial){}
   pinMode(13, OUTPUT);
+  pinMode(12,OUTPUT);
+  pinMode(11,OUTPUT);
   downString.reserve(20);
   upString.reserve(20);
 }
 
 void loop(){
   digitalWrite(13, HIGH);
+  digitalWrite(12,HIGH);
+  digitalWrite(11,HIGH);
   delay(upTicks);
   digitalWrite(13, LOW);
+  digitalWrite(12,LOW);
+  digitalWrite(11,LOW);
   delay(downTicks);  
 
   if (upDone && lowDone){ // only enters this routine when a new pair is obtained
