@@ -19,7 +19,7 @@ rec1 = Rect(400,400,200,200)
 clock = pygame.time.Clock()
 toggle = True
 while True:
-    ft = clock.tick_busy_loop(60)
+    ft = clock.tick_busy_loop(30)
     for event in pygame.event.get():
         if event.type ==pygame.QUIT:
             pygame.quit()
