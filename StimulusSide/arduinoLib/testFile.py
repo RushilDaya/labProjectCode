@@ -7,5 +7,13 @@ import time
 a = serialCommObj('COM6',9600)
 
 
-a.setFreqAndDuty(16,0.5)
-time.sleep(5)
+a.singleDutyPhase(30,'c')
+
+# a.singleDutyPhase(14,'a')
+# time.sleep(10)
+# a.singleDutyPhase(14,'b')
+# time.sleep(10)
+# a.singleDutyPhase(14,'c')
+# time.sleep(10)
+# a.singleDutyPhase(14,'d')
+# time.sleep(10)

@@ -29,3 +29,10 @@ class serialCommObj:
 		self.Connection.write(bytes(UpTimeString,'ASCII'))
 		self.Connection.write(bytes(DownTimeString,'ASCII'))
 		return True
+
+	def singleDutyPhase(self, freq, phaseIndex):
+		qPeriod = round(0.25*(1000/freq))
+		comStr = phaseIndex+str(qPeriod)+'\n'
+		self.Connection.write(bytes(comStr,'ASCII'))
+		return True
+
