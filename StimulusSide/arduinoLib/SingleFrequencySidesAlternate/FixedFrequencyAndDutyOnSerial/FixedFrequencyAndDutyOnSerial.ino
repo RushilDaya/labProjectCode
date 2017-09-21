@@ -3,8 +3,8 @@
 // input in form 'u200' and 'd340'
 // must send a pair of commands at present.
 
-int downTicks = 50;
-int upTicks = 50;
+int downTicks = 75;
+int upTicks = 75;
 bool writingUp = false;
 bool writingLow = false;
 String downString = "";
@@ -20,16 +20,15 @@ void setup(){
   pinMode(11,OUTPUT);
   downString.reserve(20);
   upString.reserve(20);
+  digitalWrite(12,HIGH);
 }
 
 void loop(){
   digitalWrite(13, HIGH);
-  digitalWrite(12,HIGH);
-  digitalWrite(11,HIGH);
+  digitalWrite(11,LOW);
   delay(upTicks);
   digitalWrite(13, LOW);
-  digitalWrite(12,LOW);
-  digitalWrite(11,LOW);
+  digitalWrite(11,HIGH);
   delay(downTicks);  
 
   if (upDone && lowDone){ // only enters this routine when a new pair is obtained
