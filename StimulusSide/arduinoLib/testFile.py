@@ -7,7 +7,12 @@ import time
 a = serialCommObj('COM6',9600)
 
 
-a.singleDutyPhase(30,'c')
+
+while :
+	a.singleDutyPhase(30,'a')
+	time.sleep(8)
+	a.singleDutyPhase(22,'a')
+	time.sleep(8)
 
 # a.singleDutyPhase(14,'a')
 # time.sleep(10)
