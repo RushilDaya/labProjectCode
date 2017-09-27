@@ -74,7 +74,7 @@ if __name__ == "__main__":
 					P7Short[counter]=Packet.sensors['P7']['value']
 					O1Short[counter]=Packet.sensors['O1']['value']
 					O2Short[counter]=Packet.sensors['O2']['value']
-					P8Short[counter]=Packet.sensors['P8']['value']
+					P8Short[counter]= O1Short[counter]-1.5*P7Short[counter]+1.5*O2Short[counter]
 					counter+=1
 			P7Full = np.roll(P7Full,-RollInLength)
 			O1Full = np.roll(O1Full,-RollInLength)

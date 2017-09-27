@@ -8,10 +8,11 @@ a = serialCommObj('COM6',9600)
 
 
 
-while :
-	a.singleDutyPhase(30,'a')
+while True:
+	print('AA')
+	a.singleDutyPhase(30,'c')
 	time.sleep(8)
-	a.singleDutyPhase(22,'a')
+#	a.singleDutyPhase(27,'c')
 	time.sleep(8)
 
 # a.singleDutyPhase(14,'a')

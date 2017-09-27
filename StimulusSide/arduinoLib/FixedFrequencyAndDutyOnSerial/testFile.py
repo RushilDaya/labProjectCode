@@ -7,7 +7,11 @@ import time
 a = serialCommObj('COM6',9600)
 
 while True:
-	a.setFreqAndDuty(29,0.5)
-	time.sleep(16)
-	a.setFreqAndDuty(31,0.5)
-	time.sleep(16)
+	a.setFreqAndDuty(26,0.5)
+	time.sleep(12)
+	a.setFreqAndDuty(28,0.5)
+	time.sleep(12)
+	a.setFreqAndDuty(30,0.5)
+	time.sleep(12)
+	a.setFreqAndDuty(32,0.5)
+	time.sleep(12)
