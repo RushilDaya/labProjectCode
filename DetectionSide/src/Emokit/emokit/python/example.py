@@ -13,3 +13,5 @@ if __name__ == "__main__":
                 print([PACK.sensors['O1']['value']])
                 PACK = emotiv.dequeue()
   #          time.sleep(0.1)
+
+

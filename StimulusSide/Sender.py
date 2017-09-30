@@ -16,11 +16,20 @@
 
 import src.InputLib  as IL
 
-ValidDictionary = IL.loadCharacterSet('lowerCaseLiterals')
-InputValidationObject = IL.InputValidation(ValidDictionary,10)
-SrcEncoder  = IL.SrcEncoder(ValidDictionary , 'basic')
-FEC = IL.ChannelEncoder('none')
-Chan = IL.Channel('FixedFrequencyAndDuty',[28, 30, 32, 34],1)
+## DEFINE PARAMETERS ######
+CharSet = 'lowerCaseLiterals'
+CharactersPerMessage = 2
+SourceEncodeMethod = 'basic'
+errorCorrection = 'none'
+TransmissionFrequenciesIdeal = [20, 22, 24, 26]
+TimePerSymbolSeconds = 4
+###########################
+
+ValidDictionary = IL.loadCharacterSet(CharSet)
+InputValidationObject = IL.InputValidation(ValidDictionary,CharactersPerMessage)
+SrcEncoder  = IL.SrcEncoder(ValidDictionary , SourceEncodeMethod)
+FEC = IL.ChannelEncoder(errorCorrection)
+Chan = IL.Channel('FixedFrequencyAndDuty',TransmissionFrequenciesIdeal,TimePerSymbolSeconds)
 
 while True:
 	sendString = InputValidationObject.getInput()
@@ -28,8 +37,6 @@ while True:
 	print(SendBits)
 	EncBits = FEC.EncodeData(SendBits)
 	print(EncBits)
-	Symbols  = IL.SymbolMapping(EncBits,4)
+	Symbols  = IL.SymbolMapping(EncBits, len(TransmissionFrequenciesIdeal))
 	print(Symbols)
 	Chan.send(Symbols)
-
-
