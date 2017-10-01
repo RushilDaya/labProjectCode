@@ -12,7 +12,9 @@
 #		Decode the data
 #		Display the decoded Result
 import math
+import src.Channel as CH
 import src.RecvSideLib as RL 
+
 
 ## DEFINE PARAMETERS ###########
 CharSet = 'lowerCaseLiterals'
@@ -28,10 +30,12 @@ Electrodes = ['O1']
 DetectionMethod = 'PSDA'
 DecisionType = 'HARD'
 syncMethod = 'KeyPress'
+FileWrite = True
+readFileName = None
 ################################
 
 
-EEGChannel = RL.Channel(ChannelSource, Electrodes)
+EEGChannel = CH.Channel(ChannelSource, Electrodes, WriteToFile = FileWrite, ReadFile = readFileName)
 #[trash1, trash2 ,UserWeights] = RL.getUserData('PSDA','dummy')
 
 Detector = RL.DetectionObject(DetectionMethod,TransmissionFrequenciesActual, None, Electrodes ,4, DecisionType)

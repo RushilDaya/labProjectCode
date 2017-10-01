@@ -8,47 +8,6 @@ import pickle
 import DetectionAlgorithms as DeAl
 
 
-class Channel:
-	def __init__(self, source, Electrodes):
-		if source == 'Emokit':
-			self.source = 'Emokit'
-			self.ElectrodeList  = Electrodes
-			self.device = Emotiv(display_output=False, verbose=False)
-			time.sleep(2)
-			self.sampleRate = 128
-		else:
-			raise NameError ('Source Not Implemented')
-
-	def getDataBlock(self, recordTime, flushBuffer): 
-		numSamples = recordTime*self.sampleRate
-		DataBlock = numpy.zeros((numSamples, len(self.ElectrodeList)))
-		if flushBuffer == True:
-			self.device.clear_queue()
-		counter = 0
-		while counter < numSamples:
-			Packet  = self.device.dequeue()
-			if Packet is not None:
-				for i in range(len(self.ElectrodeList)):
-					DataBlock[counter, i] = Packet.sensors[self.ElectrodeList[i]]['value']
-				counter +=1
-
-		return(DataBlock)
-
-	def flushBuffer(self):
-		self.device.clear_queue()
-
-	def waitForStart(self, action):
-		if action == 'KeyPress':
-			print('Press S to start: ')
-			while True:
-				Key  = ord(getch())
-				if Key == 115: # S
-				#	self.flushBuffer()
-					return 
-		else :
-			raise NameError ('invalid Action')
-
-
 def storeUserData(detectionType, user,Frequencies, UsedElectrodes, Weights):
 	path = 'src/UserData/'+detectionType+'/'+user+'.pickle'
 	with open(path ,'w') as file:
