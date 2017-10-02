@@ -15,13 +15,14 @@
 #	
 
 import src.InputLib  as IL
+import time
 
 ## DEFINE PARAMETERS ######
 CharSet = 'lowerCaseLiterals'
-CharactersPerMessage = 2
+CharactersPerMessage = 4
 SourceEncodeMethod = 'basic'
 errorCorrection = 'none'
-TransmissionFrequenciesIdeal = [20, 22, 24, 26]
+TransmissionFrequenciesIdeal = [24, 26, 28, 30]
 TimePerSymbolSeconds = 4
 ###########################
 
@@ -33,6 +34,7 @@ Chan = IL.Channel('FixedFrequencyAndDuty',TransmissionFrequenciesIdeal,TimePerSy
 
 while True:
 	sendString = InputValidationObject.getInput()
+	time.sleep(2)
 	SendBits = SrcEncoder.EncodeData(sendString)
 	print(SendBits)
 	EncBits = FEC.EncodeData(SendBits)

@@ -25,6 +25,8 @@ def getUserData(detectionType, user):
 		raise NameError ('Not Implemented')
 
 
+
+
 def hardDecision(Data):
 	# function which determines a frequency based on a hard decision
 	decisions = numpy.zeros(len(Data),numpy.int8)#based on  number of symbols to find

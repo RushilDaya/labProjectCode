@@ -18,10 +18,10 @@ import src.RecvSideLib as RL
 
 ## DEFINE PARAMETERS ###########
 CharSet = 'lowerCaseLiterals'
-CharactersPerMessage = 2
+CharactersPerMessage = 4
 SourceEncodeMethod = 'basic'
 errorCorrection = 'none'
-TransmissionFrequenciesActual = [20, 22.2, 23.8, 26.3]
+TransmissionFrequenciesActual = [23.8, 26.3, 27.7, 30.3]
 TimePerSymbolSeconds = 4
 
 ChannelSource = 'Emokit'
@@ -32,6 +32,8 @@ DecisionType = 'HARD'
 syncMethod = 'KeyPress'
 FileWrite = True
 readFileName = None
+
+recordTime = 40
 ################################
 
 
@@ -45,10 +47,10 @@ SD = RL.sourceDecoder(CharSet, SourceEncodeMethod)
 
 
 
-numBits = int(math.ceil(math.log(len(CharSet),2))*CharactersPerMessage)
-bitsPerSymbol = int(math.log(len(TransmissionFrequenciesActual),2))
-numSymbols = numBits/bitsPerSymbol
-recordTime = TimePerSymbolSeconds*numSymbols
+# numBits = int(math.ceil(math.log(len(CharSet),2))*CharactersPerMessage)
+# bitsPerSymbol = int(math.log(len(TransmissionFrequenciesActual),2))
+# numSymbols = numBits/bitsPerSymbol
+# recordTime = TimePerSymbolSeconds*numSymbols
 print(recordTime)
 
 while True:
