@@ -118,7 +118,7 @@ class ChannelDecoder:
 			return (data)
 		elif self.method =='Hamming' and self.inputType=='HARD':
 			brokenData = breakString(data, self.blockSize)
-			decodedString = ""
+			String = ""
 			for elem in brokenData:
 				String = String + FECLib.HardHammingDecode(elem, self.blockSizes, self.rate)
 			return (String)
@@ -146,6 +146,10 @@ class sourceDecoder:
 	def Decode(self,data):
 		splitData = breakString(data, self.CodeLength) ## this will disregard any bits added by the FEC to fill blocks
 		String = ""
-		for elem in splitData:  
-			String = String + self.alphabet[int(elem,2)]
-		return(String)
+		try:
+			for elem in splitData:  
+				String = String + self.alphabet[int(elem,2)]
+			return(String)
+		except IndexError:
+			print('One or more characters could not be decoded due to index error ')
+			return('XXXX')

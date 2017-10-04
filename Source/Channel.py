@@ -87,12 +87,17 @@ class Channel:
 
 
 	def waitForStart(self, action):
+		# if action == 'KeyPress':
+		# 	print('Press S to start: ')
+		# 	while True:
+		# 		Key  = ord(getch())
+		# 		if Key == 115: # S
+		# 		#	self.flushBuffer()
+		# 			return 
 		if action == 'KeyPress':
-			print('Press S to start: ')
-			while True:
-				Key  = ord(getch())
-				if Key == 115: # S
-				#	self.flushBuffer()
-					return 
+			A = raw_input('Enter S to begin: ')
+			if A == 'S' or A =='s':
+				self.flushBuffer()
+				return(True)
 		else :
 			raise NameError ('invalid Action')

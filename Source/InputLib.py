@@ -30,7 +30,7 @@ class InputValidation:
 		self.reset()
 		while self.recvState == False:
 			self.recvState = True
-			msg = input("Enter Message: ")
+			msg = raw_input("Enter Message: ")
 			if len(msg) > self.maxLength:
 				print ('Input Message too long')
 				self.recvState = False
@@ -48,7 +48,7 @@ class InputValidation:
 def NumToBin(number, outStringLength):
 	binNum = bin(number)
 	binNum = binNum[2:]
-	zeroPadLength = outStringLength-len(binNum)
+	zeroPadLength = int(outStringLength-len(binNum))
 	for i in range (zeroPadLength):
 		binNum = '0'+binNum
 	return(binNum)
@@ -63,7 +63,7 @@ class SrcEncoder:
 			self.CodeLength  = math.ceil(math.log(alphabetSize, 2))
 			self.charset = CharSet
 			self.mapSet = []
-			for i in range(len(CharSet)):
+			for i in range(len(self.charset)):
 				self.mapSet = self.mapSet + [NumToBin(i,self.CodeLength)]
 		else :
 			raise NameError('method argument Not provided')
@@ -127,22 +127,21 @@ class serialCommObj:
 			duty = 1
 
 		roundedPeriod = round(1000/freq)
-		highTimeInMilliseconds = round(duty*roundedPeriod);
-		lowTimeInMilliseconds = roundedPeriod - highTimeInMilliseconds
+		highTimeInMilliseconds = (round(duty*roundedPeriod));
+		lowTimeInMilliseconds =  (roundedPeriod - highTimeInMilliseconds)
 
-		UpTimeString = 'u'+str(highTimeInMilliseconds)+'\n'
-		DownTimeString = 'd'+str(lowTimeInMilliseconds)+'\n'
-
+		UpTimeString = 'u'+str(int(highTimeInMilliseconds))+'\n'
+		DownTimeString = 'd'+str(int(lowTimeInMilliseconds))+'\n'
 		ActualPeriod =  highTimeInMilliseconds+lowTimeInMilliseconds
 		print('Actual Transmit Freq: '+str(1000/ActualPeriod))
-		self.Connection.write(bytes(UpTimeString,'ASCII'))
-		self.Connection.write(bytes(DownTimeString,'ASCII'))
+		self.Connection.write(str(UpTimeString))
+		self.Connection.write(str(DownTimeString))
 		return True
 
 	def singleDutyPhase(self, freq, phaseIndex):
-		qPeriod = round(0.25*(1000/freq))
-		comStr = phaseIndex+str(qPeriod)+'\n'
-		self.Connection.write(bytes(comStr,'ASCII'))
+		# qPeriod = round(0.25*(1000/freq))
+		# comStr = phaseIndex+str(qPeriod)+'\n'
+		# self.Connection.write(bytes(comStr,'ASCII'))
 		return True
 
 
