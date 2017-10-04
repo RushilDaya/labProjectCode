@@ -21,6 +21,8 @@ CharSet = 'lowerCaseLiterals'
 CharactersPerMessage = 4
 SourceEncodeMethod = 'basic'
 errorCorrection = 'none'
+FEC_Size = 1
+FEC_Rate = 1
 TransmissionFrequenciesActual = [23.8, 26.3, 27.7, 30.3]
 TimePerSymbolSeconds = 4
 
@@ -33,25 +35,20 @@ syncMethod = 'KeyPress'
 FileWrite = True
 readFileName = None
 
-recordTime = 40
 ################################
 
 
 EEGChannel = CH.Channel(ChannelSource, Electrodes, WriteToFile = FileWrite, ReadFile = readFileName)
-#[trash1, trash2 ,UserWeights] = RL.getUserData('PSDA','dummy')
 
-Detector = RL.DetectionObject(DetectionMethod,TransmissionFrequenciesActual, None, Electrodes ,4, DecisionType)
+Detector = RL.DetectionObject(DetectionMethod,TransmissionFrequenciesActual, None, Electrodes ,TimePerSymbolSeconds, DecisionType)
 CharSet = RL.loadCharacterSet(CharSet)
 CD= RL.ChannelDecoder(errorCorrection)
 SD = RL.sourceDecoder(CharSet, SourceEncodeMethod)
 
 
-
-# numBits = int(math.ceil(math.log(len(CharSet),2))*CharactersPerMessage)
-# bitsPerSymbol = int(math.log(len(TransmissionFrequenciesActual),2))
-# numSymbols = numBits/bitsPerSymbol
-# recordTime = TimePerSymbolSeconds*numSymbols
+recordTime = RL.calculateRecvTime(TimePerSymbolSeconds, len(TransmissionFrequenciesActual), FEC_Size, FEC_Rate, CharactersPerMessage, len(CharSet))
 print(recordTime)
+recordTime = int(recordTime)
 
 while True:
 	EEGChannel.waitForStart(syncMethod)
