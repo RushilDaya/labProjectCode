@@ -102,6 +102,5 @@ class TestReceiveTimeCalculate(unittest.TestCase):
 		self.assertEqual(calcTime, 92.0 )	
 
 
-
 if __name__ == '__main__':
 	unittest.main()

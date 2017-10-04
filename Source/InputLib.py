@@ -2,8 +2,6 @@ import math
 import time
 import serial
 
-# the various classes ma
-
 
 def loadCharacterSet(SetName):
 	fullName = 'Source/CharacterSets/'+SetName+'.txt'
@@ -15,10 +13,11 @@ def loadCharacterSet(SetName):
 
 class InputValidation:
 	# prompts the user for a valid input
-	def __init__(self,CharSet, MaxLength):
+	def __init__(self,CharSet, MaxLength, padWithLastChar = True):
 		self.set = CharSet
 		self.recvState = False
 		self.maxLength = MaxLength
+		self.pad  = padWithLastChar
 
 	def inputRecv(self):
 		return(self.recvState)
@@ -40,6 +39,14 @@ class InputValidation:
 					if msg[index] not in self.set:
 						print('Message Contains invalid Character: '+msg[index])
 						self.recvState = False
+
+
+		# if the message does not take up the entire expected block
+		# it will be padded with the last character in the alphabet
+		if self.pad == True:
+			msg = msg + (self.set[len(self.set)-1])*(self.maxLength - len(msg))
+
+
 		return(msg)
 
 
