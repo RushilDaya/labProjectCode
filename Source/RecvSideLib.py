@@ -153,3 +153,15 @@ class sourceDecoder:
 		except IndexError:
 			print('One or more characters could not be decoded due to index error ')
 			return('XXXX')
+
+
+def calculateRecvTime(SymbolPeriod, NumSymbols, FEC_Size, FEC_Rate, NumCharacters, AlphabetLength):
+	# calculate how long it will take to receive the caracters
+	bitsPerCharacter = math.ceil(math.log(AlphabetLength, 2))
+	bitsAfterSource  = bitsPerCharacter*NumCharacters
+	FECBlocks = math.ceil(float(bitsAfterSource)/(FEC_Size*float(FEC_Rate)))
+	encLength = FECBlocks*FEC_Size
+	bitsPerSymbol = math.log(NumSymbols, 2)
+	numSymbols = math.ceil(float(encLength)/bitsPerSymbol)
+	recvTime = numSymbols*SymbolPeriod
+	return(recvTime)
