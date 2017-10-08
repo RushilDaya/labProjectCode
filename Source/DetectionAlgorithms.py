@@ -10,7 +10,7 @@ def psdaGet(data, Frequencies, sampleRate):
 	Resolution  = float(sampleRate)/len(DATA[0])
 	SampleSet = []
 	for i in range(len(Frequencies)):
-		SampleSet = SampleSet + [int(Frequencies[i]/Resolution)]
+		SampleSet = SampleSet + [int(round(Frequencies[i]/Resolution))]
 	softOut = numpy.zeros(len(Frequencies))
 	for i in range(len(Frequencies)):
 		softOut[i] = DATA[0][SampleSet[i]]

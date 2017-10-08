@@ -1,6 +1,7 @@
 import math
 import time
 import serial
+import Frequency_Determination as FD
 
 
 def loadCharacterSet(SetName):
@@ -146,6 +147,16 @@ class serialCommObj:
 		self.Connection.write(str(DownTimeString))
 		return True
 
+	def setUpDown(self, UpDownList):
+		UpTimeString = 'u'+str(UpDownList[0])+'\n'
+		DownTimeString = 'd'+str(UpDownList[1])+'\n'
+		print('Send Freq: '+str(float(1000)/(UpDownList[0]+UpDownList[1]))+' Send Duty: '+str(float(UpDownList[0])/(UpDownList[1]+UpDownList[0])))
+		self.Connection.write(str(UpTimeString))
+		self.Connection.write(str(DownTimeString))
+		return True
+
+
+
 	def singleDutyPhase(self, freq, phaseIndex):
 		# qPeriod = round(0.25*(1000/freq))
 		# comStr = phaseIndex+str(qPeriod)+'\n'
@@ -176,7 +187,7 @@ class Channel:
 
 	def send(self,SymbolList):
 		for Symbol in SymbolList:
-			self.SerialObj.setFreqAndDuty(self.FrequencySet[Symbol],0.5 )
+			self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.FrequencySet[Symbol]))
 			time.sleep(self.SymbolPeriod)
 		self.SerialObj.setFreqAndDuty(100, 0)	
 

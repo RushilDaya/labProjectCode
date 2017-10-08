@@ -22,7 +22,12 @@ CharSet = 'lowerCaseLiterals'
 CharactersPerMessage = 4
 SourceEncodeMethod = 'basic'
 errorCorrection = 'none'
-TransmissionFrequenciesIdeal = [24, 26, 28, 30]
+
+# NOTE: Only use frequencies From the following Set:
+# [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,
+#  34.48, 35.71, 37.04, 38.46 ]
+TransmissionFrequenciesIdeal = [23.26, 25, 28.57, 33.33]
+
 TimePerSymbolSeconds = 4
 ###########################
 
