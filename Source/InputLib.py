@@ -119,6 +119,7 @@ def SymbolMapping(data, numSymbols):
 	return (symbols)
 
 
+
 class serialCommObj:
 	def __init__(self, port, baud):
 		self.Connection = serial.Serial(port,baud)
