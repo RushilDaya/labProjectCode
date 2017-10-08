@@ -2,6 +2,7 @@ import unittest
 import numpy as np 
 import Source.InputLib as IL
 import Source.RecvSideLib as RL
+import Source.Frequency_Determination as  FD
 
 
 class TestSrcEncoder(unittest.TestCase):
@@ -100,6 +101,18 @@ class TestReceiveTimeCalculate(unittest.TestCase):
 		FEC_Rate = 0.6	
 		calcTime = RL.calculateRecvTime(Sym_Period, Num_Symbols, FEC_Size, FEC_Rate, Num_Characters, AlpaLength)
 		self.assertEqual(calcTime, 92.0 )	
+
+class TestFreqDetermination(unittest.TestCase):
+	def test_GetsCorrectUpAndDown(self):
+		self.assertEqual(FD.SenderGetUpAndDown(23.26),[18, 25])
+		self.assertEqual(FD.SenderGetUpAndDown(25),[16, 24])
+		self.assertEqual(FD.SenderGetUpAndDown(38.46),[13, 13])
+	def test_MapsToClosest(self):
+		freqs = [23.26, 25, 29.41, 35.71, 25.64]
+		self.assertEqual(FD.mapToClosestFrequencies(freqs, 128),[23,25,29,36,26])
+		self.assertEqual(FD.mapToClosestFrequencies(freqs, 256),[23.5,25,29.5,35.5,25.5])		
+		self.assertEqual(FD.mapToClosestFrequencies(freqs, 384),[23.33,25,29.33,35.66,25.66])	
+		self.assertEqual(FD.mapToClosestFrequencies(freqs, 512),[23.25,25,29.5,35.75,25.75])	
 
 
 if __name__ == '__main__':

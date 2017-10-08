@@ -14,6 +14,7 @@
 import math
 import Source.Channel as CH
 import Source.RecvSideLib as RL 
+import Source.Frequency_Determination as FD
 
 
 ## DEFINE PARAMETERS ###########
@@ -23,7 +24,10 @@ SourceEncodeMethod = 'basic'
 errorCorrection = 'none'
 FEC_Size = 1
 FEC_Rate = 1
-TransmissionFrequenciesActual = [23.8, 26.3, 27.7, 30.3]
+# Choose frequencies matching those on the sender side exactly from set:
+# [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,
+#  34.48, 35.71, 37.04, 38.46 ]
+TransmissionFrequenciesIdeal = [23.26, 25, 28.57, 33.33]
 TimePerSymbolSeconds = 4
 
 ChannelSource = 'Emokit'
@@ -37,6 +41,9 @@ readFileName = None
 
 ################################
 
+# the actual frequencies are the closest FFT bins to a particular sender Freq
+TransmissionFrequenciesActual = FD.mapToClosestFrequencies(TransmissionFrequenciesIdeal, 128*TimePerSymbolSeconds)
+print(TransmissionFrequenciesActual)
 
 EEGChannel = CH.Channel(ChannelSource, Electrodes, WriteToFile = FileWrite, ReadFile = readFileName)
 

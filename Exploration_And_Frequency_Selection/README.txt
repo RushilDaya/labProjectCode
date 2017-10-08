@@ -1,0 +1,5 @@
+batchFFT.m - helper function
+****
+frequency_Separation.m - used to show the FFT plots for all the valid frequencies. Use this to find maximally separated Frequencies for a given time window size.
+****
+Freq_Determination.xls - Gives a list of all acheivable frequencies. Selection process waas as follows - only consider frequencies between 23 and 38 Hz as this band is amplified by the emotivs passband and shows promise. Only consider duty cycles between 0.4 and 0.5 based on literature. When multiple UP/DOWN pairs give the same frequency - pick the one with a duty closest to 0.4 ( based on literature). Also computed is  relative error - that is the distance between the stimulation frequency and the nearest FFT bin center. a relative error of 1 means the frequency is exactly between bin centers and so its energy will be split between the two bins.  S 
