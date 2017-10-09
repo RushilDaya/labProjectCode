@@ -21,9 +21,9 @@ import Source.Frequency_Determination as FD
 CharSet = 'lowerCaseLiterals'
 CharactersPerMessage = 4
 SourceEncodeMethod = 'basic'
-errorCorrection = 'none'
-FEC_Size = 1
-FEC_Rate = 1
+errorCorrection = 'HardHamming'
+FEC_Size = 7
+FEC_Rate = float(4)/7
 # Choose frequencies matching those on the sender side exactly from set:
 # [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,
 #  34.48, 35.71, 37.04, 38.46 ]
@@ -49,7 +49,7 @@ EEGChannel = CH.Channel(ChannelSource, Electrodes, WriteToFile = FileWrite, Read
 
 Detector = RL.DetectionObject(DetectionMethod,TransmissionFrequenciesActual, None, Electrodes ,TimePerSymbolSeconds, DecisionType)
 CharSet = RL.loadCharacterSet(CharSet)
-CD= RL.ChannelDecoder(errorCorrection)
+CD= RL.ChannelDecoder(errorCorrection,'HARD',FEC_Size,FEC_Rate)
 SD = RL.sourceDecoder(CharSet, SourceEncodeMethod)
 
 

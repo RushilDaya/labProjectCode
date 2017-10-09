@@ -103,9 +103,9 @@ class ChannelDecoder:
 			if self.inputType != 'HARD':
 				raise NameError('Not Implemented')
 
-		elif self.method =='Hamming' and self.inputType =='HARD':
-			if FECLib.ValidHamming(blockSize, rate) == False:
-				raise NameError ('Invalid FEC parameters chosen')
+		elif self.method =='HardHamming' and self.inputType =='HARD':
+			#if FECLib.ValidHamming(blockSize, rate) == False:
+			#	raise NameError ('Invalid FEC parameters chosen')
 			self.blockSize = blockSize
 			self.rate = rate
 		else:
@@ -116,11 +116,11 @@ class ChannelDecoder:
 	def Decode(self, data):
 		if self.method =='none' and self.inputType =='HARD':
 			return (data)
-		elif self.method =='Hamming' and self.inputType=='HARD':
+		elif self.method =='HardHamming' and self.inputType=='HARD':
 			brokenData = breakString(data, self.blockSize)
 			String = ""
 			for elem in brokenData:
-				String = String + FECLib.HardHammingDecode(elem, self.blockSizes, self.rate)
+				String = String + FECLib.HardHammingDecode(elem) #, self.blockSizes, self.rate)
 			return (String)
 		else:
 			raise NameError('Not Implemented')

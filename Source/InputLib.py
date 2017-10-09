@@ -3,6 +3,8 @@ import time
 import serial
 import Frequency_Determination as FD
 
+import FECLib as fec
+
 
 def loadCharacterSet(SetName):
 	fullName = 'Source/CharacterSets/'+SetName+'.txt'
@@ -88,17 +90,23 @@ class SrcEncoder:
 
 class ChannelEncoder:
 	# object to add redundancy to the data 
-	def __init__(self, method):
+	def __init__(self, method, blockSize=None, rate=None):
 		if method == 'none':
 			self.method = 'none'
 			self.blockSize = 0
 			self.codeRate = 0
+		elif method == 'HardHamming':
+			self.method = 'HardHamming'
+			self.blockSize = blockSize
+			self.codeRate = rate
 		else:
 			raise NameError('Invalid Method to Channel Encoder')
 
 	def EncodeData(self, data):
 		if self.method == 'none':
 			return(data)
+		elif self.method == 'HardHamming':
+			return fec.HardHammingEncode(data)
 		else:
 			raise nameError('Bad Method for Encoder')
 
