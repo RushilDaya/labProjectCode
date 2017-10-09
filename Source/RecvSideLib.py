@@ -45,6 +45,14 @@ class DetectionObject:
 			self.electrodeSet = electrodes
 			self.SymbolPeriod = SymbolPeriod
 			self.DecisionType = DecisionType
+		elif method == 'CCA':
+			self.method = 'CCA'
+			self.Frequencies = Frequencies
+			self.Weights = Weights
+			self.electrodeSet = electrodes
+			self.SymbolPeriod = SymbolPeriod
+			self.DecisionType = DecisionType
+		#elif method == 'Combined':
 		else:
 			raise NameError('not Implemented')
 
@@ -58,6 +66,13 @@ class DetectionObject:
 			ExpectedSymbols = numpy.zeros([NumBatches, len(self.Frequencies)])
 			for index in range(NumBatches):
 				ExpectedSymbols[index,:] = DeAl.psdaGet(slicedData[index], self.Frequencies,128)
+		elif self.method == 'CCA':
+			DataSize = len(data)
+			NumBatches  = DataSize/(self.SymbolPeriod*128)
+			slicedData = numpy.split(data, NumBatches)
+			ExpectedSymbols = numpy.zeros([NumBatches, len(self.Frequencies)])
+			for index in range(NumBatches):
+				ExpectedSymbols[index,:] = DeAl.CCAget(slicedData[index], self.Frequencies,128)
 		else:
 			raise NameError('not Implemented')
 
