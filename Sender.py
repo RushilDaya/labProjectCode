@@ -21,7 +21,7 @@ import time
 CharSet = 'lowerCaseLiterals'
 CharactersPerMessage = 4
 SourceEncodeMethod = 'basic'
-errorCorrection = 'none'
+errorCorrection = 'HardHamming'
 
 # NOTE: Only use frequencies From the following Set:
 # [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,
@@ -34,7 +34,7 @@ TimePerSymbolSeconds = 4
 ValidDictionary = IL.loadCharacterSet(CharSet)
 InputValidationObject = IL.InputValidation(ValidDictionary,CharactersPerMessage)
 SrcEncoder  = IL.SrcEncoder(ValidDictionary , SourceEncodeMethod)
-FEC = IL.ChannelEncoder(errorCorrection)
+FEC = IL.ChannelEncoder(errorCorrection,7,4/7)
 Chan = IL.Channel('FixedFrequencyAndDuty',TransmissionFrequenciesIdeal,TimePerSymbolSeconds)
 
 while True:
