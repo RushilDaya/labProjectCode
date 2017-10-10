@@ -68,6 +68,8 @@ import Source.Channel as CH
 import Source.RecvSideLib as RL 
 import Source.Frequency_Determination as FD
 
+import csv
+import numpy
 
 ## DEFINE PARAMETERS ###########
 CharSet = 'lowerCaseLiterals'
@@ -85,11 +87,15 @@ TimePerSymbolSeconds = 4
 ChannelSource = 'File'
 FlushBuffer = True
 Electrodes = ['O1', 'O2', 'P7', 'P8']
-DetectionMethod = 'PSDA'
+DetectionMethod = 'Combined'
 DecisionType = 'HARD'
 syncMethod = 'KeyPress'
 FileWrite = False
 readFileName = '20171009-170644.csv' #'20171009-182912.csv'
+
+################################
+filetwo = '20171009-182912.csv'
+EEGChannel2 = CH.Channel(ChannelSource, Electrodes, WriteToFile = FileWrite, ReadFile = filetwo)
 
 ################################
 
@@ -114,9 +120,17 @@ recordTime = int(recordTime)
 #while True:
 	#EEGChannel.waitForStart(syncMethod)
 data = EEGChannel.getDataBlock(recordTime, FlushBuffer)
-#Symbols = Detector.getSymbols(data)
+target_data = EEGChannel2.getDataBlock(recordTime,FlushBuffer)
+#remove mean
+target_data = target_data - numpy.mean(target_data)	
+data = data - numpy.mean(data)
+
+#bo = Detector.get_knn_data(target_data, data)
+
 Symbols2 = Detector2.getSymbols(data)
-#print(Symbols)
+Symbols = Detector.getSymbols(target_data)    # find_knn()  #getSymbols(data)
+
+print(Symbols)
 print(Symbols2)
 #Encoded = RL.Demapper(Symbols,len(TransmissionFrequenciesActual), DecisionType)
 #Decoded = CD.Decode(Encoded)

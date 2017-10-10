@@ -38,51 +38,91 @@ def hardDecision(Data):
 
 class DetectionObject:
 	def __init__(self, method, Frequencies, Weights, electrodes, SymbolPeriod, DecisionType):
+		self.Frequencies = Frequencies
+		self.Weights = Weights
+		self.electrodeSet = electrodes
+		self.SymbolPeriod = SymbolPeriod
+		self.DecisionType = DecisionType
+		
 		if method == 'PSDA':
 			self.method = 'PSDA'
-			self.Frequencies = Frequencies
-			self.Weights = Weights
-			self.electrodeSet = electrodes
-			self.SymbolPeriod = SymbolPeriod
-			self.DecisionType = DecisionType
 		elif method == 'CCA':
 			self.method = 'CCA'
-			self.Frequencies = Frequencies
-			self.Weights = Weights
-			self.electrodeSet = electrodes
-			self.SymbolPeriod = SymbolPeriod
-			self.DecisionType = DecisionType
-		#elif method == 'Combined':
+			self.trained_coeffs = None
+			self.test_coeffs = None
+		elif method == 'Combined':
+			self.method = 'Combined'
+		elif method == 'KNN':
+			self.method = 'KNN'
+			self.trained_coeffs = None
+			self.test_coeffs = None
+			self.target_data = None
+			self.training_data = True
 		else:
 			raise NameError('not Implemented')
 
 	def getSymbols(self,data):
 		# the output of this function is either symbol indices or 
 		# an array with symbol probabilities
+		DataSize = len(data)
+		NumBatches  = DataSize/(self.SymbolPeriod*128)
+		slicedData = numpy.split(data, NumBatches)
+		ExpectedSymbols = numpy.zeros([NumBatches, len(self.Frequencies)])
+		
 		if self.method == 'PSDA':
-			DataSize = len(data)
-			NumBatches  = DataSize/(self.SymbolPeriod*128)
-			slicedData = numpy.split(data, NumBatches)
-			ExpectedSymbols = numpy.zeros([NumBatches, len(self.Frequencies)])
 			for index in range(NumBatches):
 				ExpectedSymbols[index,:] = DeAl.psdaGet(slicedData[index], self.Frequencies,128)
 		elif self.method == 'CCA':
-			DataSize = len(data)
-			NumBatches  = DataSize/(self.SymbolPeriod*128)
-			slicedData = numpy.split(data, NumBatches)
-			ExpectedSymbols = numpy.zeros([NumBatches, len(self.Frequencies)])
+			for index in range(NumBatches):
+				ExpectedSymbols[index,:] = DeAl.ccaGet(slicedData[index], self.Frequencies,128)
+		elif self.method == 'Combined':
 			for index in range(NumBatches):
 				ExpectedSymbols[index,:] = DeAl.cca_psda_get(slicedData[index], self.Frequencies,128)
+		#elif self.method == 'KNN':
+		#	for index in range(NumBatches):
+		#		ExpectedSymbols[index,:] = DeAl.cca_psda_get(slicedData[index], self.Frequencies,128)	
+		#	if self.training_data == True:
+		#		self.trained_coeffs = ExpectedSymbols
+		#		self.training_data = False
+		#	else:
+		#		self.test_coeffs = ExpectedSymbols
 		else:
 			raise NameError('not Implemented')
-
+			
+		#print 'ALLLA: ', ExpectedSymbols
 		if self.DecisionType == 'HARD':
 			return(hardDecision(ExpectedSymbols))
 		else:
-			return(ExpectedSymbols)
-
-
-
+			return(ExpectedSymbols) 
+'''
+	def get_knn_data(self, target_data,data):
+		self.getSymbols(target_data)
+		self.getSymbols(data)
+		
+	def find_knn(self): #,train_set,test_set):
+		#self.trained_coeffs = DeAl.cca_psda_get(train_set,self.Frequencies,128)
+		#self.test_coeffs = DeAl.cca_psda_get(test_set,self.Frequencies,128)
+		predictions = []
+		k = 3
+		#print 'testCo: ', (self.test_coeffs[:][1])
+		#print 'lenn: ', len(self.test_coeffs)
+		for x in range(len(self.test_coeffs)):
+			print 'XXXX:, ', x
+			neighbors = DeAl.getNeighbors(self.trained_coeffs, max(self.test_coeffs[:][x]), k)
+			result = DeAl.getResponse(neighbors)
+			predictions.append(result)
+			print('> predicted=' + repr(result) + ', actual=' + repr(self.test_coeffs[x][-1]))
+		accuracy = DeAl.getAccuracy(self.test_coeffs, predictions)
+		print('Accuracy: ' + repr(accuracy) + '%')
+		
+		probs = predictions/sum(predictions)
+		
+		print 'ASSS: ', probs
+		
+		return hardDecision(probs)
+		
+		#return probs
+'''	
 
 def Demapper(Symbols, num_Symbols,method):
 	# the InputType is either hard or Soft and determined by the type of symbols comming in

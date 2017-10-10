@@ -1,18 +1,19 @@
+import math
+import operator
 import numpy
 from numpy import pi
 from numpy.linalg import cholesky,inv,svd
 from scipy.signal import butter, lfilter
-from sklearn.neighbors import KNeighborsRegressor
+#from sklearn.neighbors import KNeighborsRegressor
+
 
 def cca_psda_get(data,Frequencies,sampleRate):
 	psda_probs = psdaGet(data,Frequencies,sampleRate)
-	cca_probs = CCAget(data,Frequencies,sampleRate)
+	cca_probs = ccaGet(data,Frequencies,sampleRate)
 	
 	comb = (numpy.add(psda_probs,cca_probs))/2
 	
 	return comb
-	
-	
 
 def psdaGet(data, Frequencies, sampleRate):
 	#very basic form of PSDA
@@ -20,7 +21,7 @@ def psdaGet(data, Frequencies, sampleRate):
 	# ONLY works for one dimensional data
 	data = data.transpose() #data.reshape([1,len(data)])
 	DATA = abs(numpy.fft.fft(data - numpy.mean(data)))
-	#print('=====')
+	#print('=====: ', (DATA.shape))
 	Resolution  = float(sampleRate)/len(DATA[0])
 	SampleSet = []
 	for i in range(len(Frequencies)):
@@ -35,7 +36,7 @@ def psdaGet(data, Frequencies, sampleRate):
 	return(probs)
 
 	
-def CCAget(data,Frequencies,sampleRate):
+def ccaGet(data,Frequencies,sampleRate):
 	#Makes use of the CCA function and returns canonical coefficients for each target frequency
 	
 	#remove mean
