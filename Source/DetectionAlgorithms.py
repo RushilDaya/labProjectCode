@@ -2,6 +2,17 @@ import numpy
 from numpy import pi
 from numpy.linalg import cholesky,inv,svd
 from scipy.signal import butter, lfilter
+from sklearn.neighbors import KNeighborsRegressor
+
+def cca_psda_get(data,Frequencies,sampleRate):
+	psda_probs = psdaGet(data,Frequencies,sampleRate)
+	cca_probs = CCAget(data,Frequencies,sampleRate)
+	
+	comb = (numpy.add(psda_probs,cca_probs))/2
+	
+	return comb
+	
+	
 
 def psdaGet(data, Frequencies, sampleRate):
 	#very basic form of PSDA
@@ -20,7 +31,7 @@ def psdaGet(data, Frequencies, sampleRate):
 
 	probs = softOut/sum(softOut)
 	
-	print('YAYA: ', probs)
+	#print('YAYA: ', probs)
 	return(probs)
 
 	
@@ -46,7 +57,7 @@ def CCAget(data,Frequencies,sampleRate):
 		coeffs = coeffs + [CCA(X,DATA)]
 		
 	probs = coeffs/sum(coeffs)
-	print('HELLO: ', probs)
+	#print('HELLO: ', probs)
 	
 	return probs
 

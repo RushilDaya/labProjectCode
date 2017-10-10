@@ -72,7 +72,7 @@ class DetectionObject:
 			slicedData = numpy.split(data, NumBatches)
 			ExpectedSymbols = numpy.zeros([NumBatches, len(self.Frequencies)])
 			for index in range(NumBatches):
-				ExpectedSymbols[index,:] = DeAl.CCAget(slicedData[index], self.Frequencies,128)
+				ExpectedSymbols[index,:] = DeAl.cca_psda_get(slicedData[index], self.Frequencies,128)
 		else:
 			raise NameError('not Implemented')
 
