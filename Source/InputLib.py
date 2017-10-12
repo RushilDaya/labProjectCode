@@ -178,12 +178,18 @@ class Channel:
 	# the channel is the arduino system. 
 	# ie data sent to the channel is serially sent to the arduino 
 	# refactor this to inheritance later
-	def __init__(self,ArdScript, UsedFrequencies, SymbolPeriod):
+	def __init__(self,ArdScript, UsedFrequencies, SymbolPeriod, header = False, holdFrequency =None, headerFrequency = None):
 		self.ArdScript = ArdScript
 		self.SerialObj  = serialCommObj('COM6',9600)
 		time.sleep(1)
+		self.f1 = holdFrequency
+		self.f2 = headerFrequency
+		self.header = header
 		if ArdScript =='FixedFrequencyAndDuty':
-			self.SerialObj.setFreqAndDuty(100,0) # effectively an off state
+			if self.header == False:
+				self.SerialObj.setFreqAndDuty(100,0) # effectively an off state
+			else:
+				self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f1)) # setting the hold frequency
 		else:
 			raise NameError ('Channel Model unimplemented')
 		self.FrequencySet = UsedFrequencies
@@ -193,15 +199,47 @@ class Channel:
 		self.FrequencySet = newFreqs
 		self.SymbolPeriod = newPeriod
 
+
+	def sendHeader(self):
+		# the header is the sender side of a protocol when a autostart and sync are required
+		# the protocol is non-trivial and may not be easily understood in code
+		# Supporting documents are provided which explain the protocol
+		print('===START HEADER===')
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f2))
+		time.sleep(8)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f1))
+		time.sleep(4)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f2))
+		time.sleep(1)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f1))
+		time.sleep(4)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f2))
+		time.sleep(1)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f1))
+		time.sleep(4)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f2))
+		time.sleep(1)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f1))
+		time.sleep(4)
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f2))
+		time.sleep(4)
+		print('===END HEADER===')
+
+
+
+
 	def send(self,SymbolList):
+		if self.header == True :
+			self.sendHeader()
+		print('=== START MESSAGE ===')
+		print(time.time())
 		for Symbol in SymbolList:
 			self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.FrequencySet[Symbol]))
 			time.sleep(self.SymbolPeriod)
-		self.SerialObj.setFreqAndDuty(100, 0)	
-
-
-
-
-
-
-
+		print('=== END MESSAGE ===')
+		if self.header == False:
+			self.SerialObj.setFreqAndDuty(100, 0)	
+		else :
+			self.SerialObj.setFreqAndDuty(100, 0)
+			time.sleep(3)
+			self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f1)) # reset

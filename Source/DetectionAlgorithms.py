@@ -142,3 +142,27 @@ def bandpass_filt(lowF, highF, fs, order=5):
     high = highF/nyq
     b, a = butter(order, [low, high], btype='band')
     return b, a
+
+
+
+def psdaGetForHeader(data, Frequencies, sampleRate, absHeight= False):
+	#This is a tempory single channel PSDA
+	# Use this only for the header -- once detection is finalized
+	# the header should be changed to allow for the more complete form of detection
+
+	data = data.reshape([1,len(data)])
+	DATA = abs(numpy.fft.fft(data - numpy.mean(data)))
+	#print('=====')
+	Resolution  = float(sampleRate)/len(DATA[0])
+	SampleSet = []
+	for i in range(len(Frequencies)):
+		SampleSet = SampleSet + [int(round(Frequencies[i]/Resolution))]
+	softOut = numpy.zeros(len(Frequencies))
+	for i in range(len(Frequencies)):
+		softOut[i] = DATA[0][SampleSet[i]]
+
+	probs = softOut/sum(softOut)
+	if absHeight == True:
+		return([probs, softOut])
+
+	return(probs)
