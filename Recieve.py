@@ -20,7 +20,7 @@ import Source.Frequency_Determination as FD
 
 ## DEFINE PARAMETERS ###########
 CharSet = 'lowerCaseLiterals'
-CharactersPerMessage = 4
+CharactersPerMessage = 5
 SourceEncodeMethod = 'basic'
 errorCorrection = 'HardHamming'
 FEC_Size = 7
@@ -28,8 +28,8 @@ FEC_Rate = float(4)/7
 # Choose frequencies matching those on the sender side exactly from set:
 # [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,
 #  34.48, 35.71, 37.04, 38.46 ]
-TransmissionFrequenciesIdeal = [23.26, 25, 28.57, 33.33]
-TimePerSymbolSeconds = 4
+TransmissionFrequenciesIdeal = [23.26, 25, 26.36, 27.78 ,28.57, 30.30, 31.25, 33.33]
+TimePerSymbolSeconds = 2
 
 ChannelSource = 'Emokit'
 FlushBuffer = True
@@ -64,6 +64,7 @@ while True:
 	Symbols = Detector.getSymbols(data)
 	print(Symbols)
 	Encoded = RL.Demapper(Symbols,len(TransmissionFrequenciesActual), DecisionType)
+	print(Encoded)
 	Decoded = CD.Decode(Encoded)
 	String = SD.Decode(Decoded)
 	print(String)

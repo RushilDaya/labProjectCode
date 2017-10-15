@@ -101,3 +101,4 @@ if __name__ == "__main__":
 			sPlotO2.set_ydata(O2Half_FFT)
 			sPlotP8.set_ydata(P8Half_FFT)
 			fig.canvas.draw()
+			plt.pause(0.001)

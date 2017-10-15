@@ -243,3 +243,7 @@ class Channel:
 			self.SerialObj.setFreqAndDuty(100, 0)
 			time.sleep(3)
 			self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.f1)) # reset
+
+	def setSingleFreq(self, SingleFrequency):
+		# used in the calibration
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(SingleFrequency))
