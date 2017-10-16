@@ -9,17 +9,18 @@ import Source.InputLib as SendLib
 import Source.DetectionAlgorithms as Detections
 import Source.Frequency_Determination as FD
 
-
+# extremly spagetti
 
 
 
 # ===========Frequency Selection Routine==============================================
 #=====Variables====
-
-FrequencySet = [23.26, 23.81, 24.39, 25]#, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,34.48, 35.71, 37.04, 38.46]
-SymbolVector = [0,1,2,3]#,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
+TimeSet_seconds = [4, 3]
+print('TimeSet variation Not yet Implemented - default will be for 3 and 4 seconds')
+FrequencySet = [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,34.48, 35.71, 37.04, 38.46]
+SymbolVector = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17]
 ElectrodesForCCA = ['O1','O2','P7','P8']
-NumRuns = 2 # how many detection loops should be performed
+NumRuns = 4 # how many detection loops should be performed
 # =================
 
 #########
@@ -55,7 +56,7 @@ for i in range(NumRuns):
 	ResultsPSDA4s[:,i]=detectedPSDA
 	ResultsCombined4s[:,i]=detectedCombined
 	Sender.SerialObj.setFreqAndDuty(100, 0)
-	time.sleep(1)
+	time.sleep(7)
 
 
 TransmissionFrequencies3s = FD.mapToClosestFrequencies(FrequencySet, 384)
@@ -65,7 +66,7 @@ CombinedDetector3s = RecvLib.DetectionObject('Combined',TransmissionFrequencies3
 ResultsCCA3s = numpy.zeros([len(SymbolVector),NumRuns])
 ResultsPSDA3s = numpy.zeros([len(SymbolVector),NumRuns])
 ResultsCombined3s = numpy.zeros([len(SymbolVector),NumRuns])
-time.sleep(2)
+time.sleep(0)
 Receiver.flushBuffer()
 
 for i in range(NumRuns):
@@ -86,16 +87,19 @@ for i in range(NumRuns):
 	ResultsPSDA3s[:,i]=detectedPSDA
 	ResultsCombined3s[:,i]=detectedCombined
 	Sender.SerialObj.setFreqAndDuty(100, 0)
-	time.sleep(1)
+	time.sleep(7)
 
-#=== End Data Collect ====
-########################
+# #=== End Data Collect ====
+# ########################
+
+# ================== Determine Optimal Parameters ===========================================
 
 DetectionAccuracy3s = numpy.zeros([len(SymbolVector),4])
 DetectionAccuracy4s = numpy.zeros([len(SymbolVector),4])
 
 DetectionAccuracy3s[:,0]= numpy.linspace(0,len(SymbolVector)-1,len(SymbolVector))
 DetectionAccuracy4s[:,0]= numpy.linspace(0,len(SymbolVector)-1,len(SymbolVector))
+
 
 for Symbol in range(len(SymbolVector)):
 	for j in range(NumRuns):
@@ -115,50 +119,108 @@ for Symbol in range(len(SymbolVector)):
 print(DetectionAccuracy4s)
 print(DetectionAccuracy3s)
 
+
+def ITR(symbolPeriod, NumSymbols,Accuracy):
+	if Accuracy < 0.01:
+		return(0)
+	symbolPeriod = float(symbolPeriod)
+	NumSymbols = float(NumSymbols)
+	Accuracy = float(Accuracy)
+	term1 = math.log(NumSymbols,2)
+	term2 = Accuracy*math.log(Accuracy,2)
+	if Accuracy >0.999:
+		term3 = 0
+	else:
+		term3 = (1-Accuracy)*math.log(((1-Accuracy)/(NumSymbols-1)),2)
+	itr = (term1 + term2 + term3)*(60/symbolPeriod)
+	return(itr)
+
+
 # Calculate the Average detection accuracies for the different configurations
 LargestValidConstellationSize = int(math.floor(math.log(len(SymbolVector),2)))
 results = numpy.zeros([1,LargestValidConstellationSize*2*3]) # accounts for all the results
+ITRVector = numpy.zeros([1,LargestValidConstellationSize*2*3])
 # format of the results
 # [3sCCA_2Sym,3sPSDA_2Sym,3sCOM_2Sym,4sCCA_2Sym,4sPSDA_2Sym,4sCOM_2Sym,3sCCA_4Sym,3sPSDA_4Sym,3sCOM_4Sym,4sCCA_4Sym,4sPSDA_4Sym,4sCOM_4Sym,...]
 for i in range(LargestValidConstellationSize):
 	CSize = i + 1 
 	NumPoints = int(math.pow(2,CSize)) # the number of points for a particular constellation
 	length = len(SymbolVector)
-	results[i*6+0] = numpy.sort(DetectionAccuracy3s[:,1])[length-NumPoints:length].mean()
-	results[i*6+1] = numpy.sort(DetectionAccuracy3s[:,2])[length-NumPoints:length].mean()
-	results[i*6+2] = numpy.sort(DetectionAccuracy3s[:,3])[length-NumPoints:length].mean()
-	results[i*6+3] = numpy.sort(DetectionAccuracy4s[:,1])[length-NumPoints:length].mean()
-	results[i*6+4] = numpy.sort(DetectionAccuracy4s[:,2])[length-NumPoints:length].mean()
-	results[i*6+5] = numpy.sort(DetectionAccuracy4s[:,3])[length-NumPoints:length].mean()
+	results[0,i*6+0] = numpy.sort(DetectionAccuracy3s[:,1])[length-NumPoints:length].mean()
+	ITRVector[0,i*6+0] = ITR(3,NumPoints,results[0,i*6+0])
+	results[0,i*6+1] = numpy.sort(DetectionAccuracy3s[:,2])[length-NumPoints:length].mean()
+	ITRVector[0,i*6+1] = ITR(3,NumPoints,results[0,i*6+1])
+	results[0,i*6+2] = numpy.sort(DetectionAccuracy3s[:,3])[length-NumPoints:length].mean()
+	ITRVector[0,i*6+2] = ITR(3,NumPoints,results[0,i*6+2])
+	results[0,i*6+3] = numpy.sort(DetectionAccuracy4s[:,1])[length-NumPoints:length].mean()
+	ITRVector[0,i*6+3] = ITR(4,NumPoints,results[0,i*6+3])
+	results[0,i*6+4] = numpy.sort(DetectionAccuracy4s[:,2])[length-NumPoints:length].mean()
+	ITRVector[0,i*6+4] = ITR(4,NumPoints,results[0,i*6+4])
+	results[0,i*6+5] = numpy.sort(DetectionAccuracy4s[:,3])[length-NumPoints:length].mean()
+	ITRVector[0,i*6+5] = ITR(4,NumPoints,results[0,i*6+5])
 
 print(results)
+print(ITRVector)
+print('=====')
+
+
+MaxITRIndex = numpy.argmax(ITRVector[0])
+detectionKey = MaxITRIndex % 6
+ModulationMu = int(float(MaxITRIndex)/6) + 1
+
+# the the detectionKey indicates which detecion scheme to use
+# the Modulation Mu is the modulation that will be used
+
+
+#============= Determine the frequencies and the modulation order that should be used
+if detectionKey == 0:
+	ChosenResults = DetectionAccuracy3s[:,1]
+elif detectionKey == 1:
+	ChosenResults = DetectionAccuracy3s[:,2]
+elif detectionKey == 2:
+	ChosenResults = DetectionAccuracy3s[:,3]
+elif detectionKey == 3:
+	ChosenResults = DetectionAccuracy4s[:,1]
+elif detectionKey == 4:
+	ChosenResults = DetectionAccuracy4s[:,2]
+elif detectionKey == 5:
+	ChosenResults = DetectionAccuracy4s[:,3]
+
+print(ChosenResults)
+indices = numpy.argsort(ChosenResults)
+indices = indices[len(indices)-int(math.pow(2,ModulationMu)):len(indices)]
+print(indices)
+
+
+print('Use the following Frequencies', numpy.take(FrequencySet,indices))
+if detectionKey < 3 :
+	print('record time 3 s')
+else:
+	print('record time 4 s')
+print('theoretical ITR: '+str(ITRVector[0,MaxITRIndex]))
+
+
+
+# determine the symbol mapping Scheme ======================================================
+# the symbol mapper scheme can be implemented at a later point once it is determined
+# what the symbol misclassification is like
+
+# =====================Determine the FEC rate to be used====================================
+# Once more FECs are implemented  - set the desired scheme here
+# this means -  chose the scheme which provides an appropriate amount of FEC for the system accuary
+
+
+
+# =====================Save the results ====================================================
+# put the results in a pickle file make provision for this
 
 
 
 
+# ==========================================================================================
 
 
-
-
-
-
-
-# for Symbol in SymbolVector:
-# 	DetectionRate = numpy.zeros([1,3])
-# 	for i in numRuns:
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ====== A scheme which plots the FFTS in real time and draws points on them doesnt really work
 # ## set up the display window =====
 # plt.ion()
 # fig = plt.figure()
