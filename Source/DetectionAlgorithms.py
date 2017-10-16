@@ -7,9 +7,9 @@ from scipy.signal import butter, lfilter
 #from sklearn.neighbors import KNeighborsRegressor
 
 
-def cca_psda_get(data,Frequencies,sampleRate):
+def cca_psda_get(data,Frequencies,sampleRate, SymbolPeriod):
 	psda_probs = psdaGet(data,Frequencies,sampleRate)
-	cca_probs = ccaGet(data,Frequencies,sampleRate)
+	cca_probs = ccaGet(data,Frequencies,sampleRate,SymbolPeriod)
 	
 	comb = (numpy.add(psda_probs,cca_probs))/2
 	
@@ -36,7 +36,7 @@ def psdaGet(data, Frequencies, sampleRate):
 	return(probs)
 
 	
-def ccaGet(data,Frequencies,sampleRate):
+def ccaGet(data,Frequencies,sampleRate, SymbolPeriod):
 	#Makes use of the CCA function and returns canonical coefficients for each target frequency
 	
 	#remove mean
@@ -53,7 +53,7 @@ def ccaGet(data,Frequencies,sampleRate):
 	#print ('LENGHTT: ', data)
 	coeffs = []
 	for i in range(0, len(Frequencies)):
-		X = ref_signals(Frequencies[i],samples,Nh)
+		X = ref_signals(Frequencies[i],samples,Nh,SymbolPeriod)
 		#print(X)
 		coeffs = coeffs + [CCA(X,DATA)]
 		
@@ -122,13 +122,13 @@ def CCA(X,Y):
 
 	return max(coeffs)
 		
-def ref_signals(freq, samples, harmonics_no):
+def ref_signals(freq, samples, harmonics_no,SymbolPeriod):
 ##Returns array of reference stimulus signals for CCA algorithm
 
 	sig = numpy.zeros((samples,(2+2*harmonics_no)))
 	c = 0 
 	for i in range (0, harmonics_no+1):
-		t = numpy.linspace(0,2*pi*(i+1)*freq*4,samples); #time vector with n observations
+		t = numpy.linspace(0,2*pi*(i+1)*freq*SymbolPeriod,samples); #time vector with n observations
 		sig[:,c] = numpy.sin(t) # + np.cos(t) #(2*pi*t*(i+1)*f)
 		sig[:,c+1] = numpy.cos(t) #(2*pi*t*(i+1)*f)
 		c = c + 2
