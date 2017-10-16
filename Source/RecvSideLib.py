@@ -74,10 +74,10 @@ class DetectionObject:
 				ExpectedSymbols[index,:] = DeAl.psdaGet(slicedData[index], self.Frequencies,128)
 		elif self.method == 'CCA':
 			for index in range(NumBatches):
-				ExpectedSymbols[index,:] = DeAl.ccaGet(slicedData[index], self.Frequencies,128)
+				ExpectedSymbols[index,:] = DeAl.ccaGet(slicedData[index], self.Frequencies,128, self.SymbolPeriod)
 		elif self.method == 'Combined':
 			for index in range(NumBatches):
-				ExpectedSymbols[index,:] = DeAl.cca_psda_get(slicedData[index], self.Frequencies,128)
+				ExpectedSymbols[index,:] = DeAl.cca_psda_get(slicedData[index], self.Frequencies,128, self.SymbolPeriod)
 		#elif self.method == 'KNN':
 		#	for index in range(NumBatches):
 		#		ExpectedSymbols[index,:] = DeAl.cca_psda_get(slicedData[index], self.Frequencies,128)	
