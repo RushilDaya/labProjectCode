@@ -1,6 +1,7 @@
 import math
 import operator
 import numpy
+import Frequency_Determination as FD
 from numpy import pi
 from numpy.linalg import cholesky,inv,svd
 from scipy.signal import butter, lfilter
@@ -166,3 +167,18 @@ def psdaGetForHeader(data, Frequencies, sampleRate, absHeight= False):
 		return([probs, softOut])
 
 	return(probs)
+
+
+def CalibrationFFT(data, Frequency):
+	searchFrequencyList = FD.mapToClosestFrequencies([Frequency], len(data))
+	searchFrequency = searchFrequencyList[0]
+	data = data.reshape([1, len(data)])
+	DATA = abs(numpy.fft.fft(data - numpy.mean(data)))
+	fftResolution = float(128)/len(DATA[0])
+	SampleIndex = int(round(searchFrequency/fftResolution))
+	absHeight = DATA[0][SampleIndex]
+	MeanMagnitude = numpy.sum(DATA)/len(DATA)
+	relHeight = 2*absHeight/MeanMagnitude
+	return([absHeight, relHeight])
+
+

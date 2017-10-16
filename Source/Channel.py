@@ -94,6 +94,8 @@ class Channel:
 		else:
 			print('Warning: flush buffer has no effect on file source')
 
+
+
 #### AUTO SYNC CODE BEGIN #####################################################
 	def shortDataCollect(self, numSamples, SingleElectrode):
 		# collect just a single short batch of data, Only on one electrode

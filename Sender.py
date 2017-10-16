@@ -19,16 +19,16 @@ import time
 
 ## DEFINE PARAMETERS ######
 CharSet = 'lowerCaseLiterals'
-CharactersPerMessage = 4
+CharactersPerMessage = 5
 SourceEncodeMethod = 'basic'
 errorCorrection = 'HardHamming'
 
 # NOTE: Only use frequencies From the following Set:
 # [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,
 #  34.48, 35.71, 37.04, 38.46 ]
-TransmissionFrequenciesIdeal = [23.26, 25, 28.57, 33.33]
+TransmissionFrequenciesIdeal = [23.26, 25, 26.36, 27.78 ,28.57, 30.30, 31.25, 33.33]
 
-TimePerSymbolSeconds = 4
+TimePerSymbolSeconds = 2
 ###########################
 
 ValidDictionary = IL.loadCharacterSet(CharSet)

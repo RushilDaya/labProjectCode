@@ -31,6 +31,7 @@ def SenderGetUpAndDown(frequency):
 	for i in range(len(FreqLookUp)):
 		if FreqLookUp[i][2] == frequency:
 			return ([FreqLookUp[i][0], FreqLookUp[i][1]])
+	print(frequency)
 	raise NameError ('Frequency Not Valid')
 
 
