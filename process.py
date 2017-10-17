@@ -10,8 +10,8 @@ CharactersPerMessage = 7
 SourceEncodeMethod = 'basic'
 errorCorrection = 'HardHamming'
 
-FEC_blockSize = 7
-FEC_msgSize = 4
+FEC_blockSize = 15
+FEC_msgSize = 11
 
 ###########################
 
@@ -44,8 +44,19 @@ while 1:
 	print 'EncBits:', (EncBits)
 	IntBits = FEC.interleave(EncBits)
 	print 'IntBITS: ', (IntBits)
-	Symbols  = IL.SymbolMapping(IntBits, 4)
-	print 'Symbols: ', (Symbols)
+	
+	NoisyBits = ''
+	for i in range(0, len(IntBits)):
+		if i == 2:
+			NoisyBits += '1'
+		else:
+			NoisyBits += IntBits[i]
+	
+	
+	print 'NoisyBits: ', NoisyBits
+	
+	Symbols  = IL.SymbolMapping(NoisyBits, 4)
+	print 'Symbols: ', len(Symbols)
 	
 	
 	Encoded = RL.Demapper(Symbols,4, 'HARD')
