@@ -151,18 +151,19 @@ def breakString(string, brokenLength):
 
 
 class ChannelDecoder:
-	def __init__(self, method='none',inputType='HARD', blockSize = None, rate = None):
+	def __init__(self, method='none',inputType='HARD', blockSize=None, msgSize=None): # blockSize = None, rate = None):
 		self.method = method
 		self.inputType = inputType
+		
 		if self.method =='none':
 			if self.inputType != 'HARD':
 				raise NameError('Not Implemented')
-
 		elif self.method =='HardHamming' and self.inputType =='HARD':
 			#if FECLib.ValidHamming(blockSize, rate) == False:
 			#	raise NameError ('Invalid FEC parameters chosen')
-			self.blockSize = blockSize
-			self.rate = rate
+			#self.rate = rate
+			self.hamming_obj = FECLib.hammingCode(blockSize, msgSize)
+			self.blockSize = blockSize #self.hamming_obj.get_blockSize()
 		else:
 			raise NameError('Not Implemented')
 
@@ -175,12 +176,14 @@ class ChannelDecoder:
 			brokenData = breakString(data, self.blockSize)
 			String = ""
 			for elem in brokenData:
-				String = String + FECLib.HardHammingDecode(elem) #, self.blockSizes, self.rate)
+				String = String + self.hamming_obj.HardHammingDecode(elem) #, self.blockSizes, self.rate)
 			return (String)
 		else:
 			raise NameError('Not Implemented')
 			
 	def de_interleave(self, message):
+		
+		message = self.depad(message)
 		
 		x = len(message)
 		n_cols = self.min_cols(x)
@@ -191,8 +194,12 @@ class ChannelDecoder:
 		result = []
 		for i in range(0, n_cols):
 			result.extend(message[i:len(message):n_cols])
+			
+		str_result = ''
+		for i in range(0, len(result)):
+			str_result = str_result + str(result[i])
     
-		return result
+		return str_result
 		
 	def min_cols(self,x):
 		#possible_cols = []
@@ -201,6 +208,14 @@ class ChannelDecoder:
 				return i
 				
 
+	def depad(self,msg):
+		x = len(msg)
+		
+		num_words = int(x/self.blockSize) 
+		ind = num_words*self.blockSize
+		
+		return msg[:ind]
+	
 
 def loadCharacterSet(SetName):
 	fullName = 'Source/CharacterSets/'+SetName+'.txt'
@@ -231,12 +246,13 @@ class sourceDecoder:
 			return('XXXX')
 
 
-def calculateRecvTime(SymbolPeriod, NumSymbols, FEC_Size, FEC_Rate, NumCharacters, AlphabetLength):
+def calculateRecvTime(SymbolPeriod, NumSymbols, FEC_blockSize, FEC_msgSize, NumCharacters, AlphabetLength):
 	# calculate how long it will take to receive the caracters
+	FEC_Rate = float(FEC_msgSize)/FEC_blockSize
 	bitsPerCharacter = math.ceil(math.log(AlphabetLength, 2))
 	bitsAfterSource  = bitsPerCharacter*NumCharacters
-	FECBlocks = math.ceil(float(bitsAfterSource)/(FEC_Size*float(FEC_Rate)))
-	encLength = FECBlocks*FEC_Size
+	FECBlocks = math.ceil(float(bitsAfterSource)/(FEC_blockSize*float(FEC_Rate)))
+	encLength = FECBlocks*FEC_blockSize
 	bitsPerSymbol = math.log(NumSymbols, 2)
 	numSymbols = math.ceil(float(encLength)/bitsPerSymbol)
 	recvTime = numSymbols*SymbolPeriod

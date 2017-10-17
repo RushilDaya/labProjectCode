@@ -90,15 +90,14 @@ class SrcEncoder:
 
 class ChannelEncoder:
 	# object to add redundancy to the data 
-	def __init__(self, method, blockSize=None, rate=None):
+	def __init__(self, method, blockSize=None, msgSize=None):
 		if method == 'none':
 			self.method = 'none'
 			self.blockSize = 0
 			self.codeRate = 0
 		elif method == 'HardHamming':
 			self.method = 'HardHamming'
-			self.blockSize = blockSize
-			self.codeRate = rate
+			self.hamming_obj = fec.hammingCode(blockSize, msgSize)
 		else:
 			raise NameError('Invalid Method to Channel Encoder')
 
@@ -106,7 +105,7 @@ class ChannelEncoder:
 		if self.method == 'none':
 			return(data)
 		elif self.method == 'HardHamming':
-			return fec.HardHammingEncode(data)
+			return self.hamming_obj.HardHammingEncode(data)
 		else:
 			raise nameError('Bad Method for Encoder')
 			
@@ -121,8 +120,12 @@ class ChannelEncoder:
 		result = []
 		for i in range(0, n_cols):
 			result.extend(message[i:len(message):n_cols])
+			
+		str_result = ''
+		for i in range(0, len(result)):
+			str_result = str_result + str(result[i])
     
-		return result
+		return str_result
 		
 	def max_cols(self,x):
 		possible_cols = []
