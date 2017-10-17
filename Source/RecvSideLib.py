@@ -52,12 +52,12 @@ class DetectionObject:
 			self.test_coeffs = None
 		elif method == 'Combined':
 			self.method = 'Combined'
-		elif method == 'KNN':
-			self.method = 'KNN'
-			self.trained_coeffs = None
-			self.test_coeffs = None
-			self.target_data = None
-			self.training_data = True
+		#elif method == 'KNN':
+		#	self.method = 'KNN'
+		#	self.trained_coeffs = None
+		#	self.test_coeffs = None
+		#	self.target_data = None
+		#	self.training_data = True
 		else:
 			raise NameError('not Implemented')
 
@@ -89,7 +89,6 @@ class DetectionObject:
 		else:
 			raise NameError('not Implemented')
 			
-		#print 'ALLLA: ', ExpectedSymbols
 		if self.DecisionType == 'HARD':
 			return(hardDecision(ExpectedSymbols))
 		else:
@@ -159,9 +158,6 @@ class ChannelDecoder:
 			if self.inputType != 'HARD':
 				raise NameError('Not Implemented')
 		elif self.method =='HardHamming' and self.inputType =='HARD':
-			#if FECLib.ValidHamming(blockSize, rate) == False:
-			#	raise NameError ('Invalid FEC parameters chosen')
-			#self.rate = rate
 			self.hamming_obj = FECLib.hammingCode(blockSize, msgSize)
 			self.blockSize = blockSize #self.hamming_obj.get_blockSize()
 		else:
@@ -249,11 +245,19 @@ class sourceDecoder:
 def calculateRecvTime(SymbolPeriod, NumSymbols, FEC_blockSize, FEC_msgSize, NumCharacters, AlphabetLength):
 	# calculate how long it will take to receive the caracters
 	FEC_Rate = float(FEC_msgSize)/FEC_blockSize
+	#print 'AAAAA: ', FEC_Rate
 	bitsPerCharacter = math.ceil(math.log(AlphabetLength, 2))
+	#print 'BBBBBB: ', bitsPerCharacter
 	bitsAfterSource  = bitsPerCharacter*NumCharacters
-	FECBlocks = math.ceil(float(bitsAfterSource)/(FEC_blockSize*float(FEC_Rate)))
+	#print 'CCCCC: ', bitsAfterSource
+	FECBlocks = math.ceil(float(bitsAfterSource)/(FEC_msgSize))
+	#print 'DDDDDD: ', FECBlocks
 	encLength = FECBlocks*FEC_blockSize
+	#print 'EEEEEE: ', encLength
 	bitsPerSymbol = math.log(NumSymbols, 2)
+	#print 'FFFFF: ', bitsPerSymbol
 	numSymbols = math.ceil(float(encLength)/bitsPerSymbol)
+	#print 'GGGGG: ', numSymbols
 	recvTime = numSymbols*SymbolPeriod
+	#print 'HHHHH: ', recvTime
 	return(recvTime)
