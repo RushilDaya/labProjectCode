@@ -6,30 +6,34 @@ import Source.Channel as CH
 import Source.RecvSideLib as RL 
 
 CharSet = 'lowerCaseLiterals'
-CharactersPerMessage = 3
+CharactersPerMessage = 7
 SourceEncodeMethod = 'basic'
 errorCorrection = 'HardHamming'
+
+FEC_blockSize = 7
+FEC_msgSize = 4
+
 ###########################
 
 ValidDictionary = IL.loadCharacterSet(CharSet)
 InputValidationObject = IL.InputValidation(ValidDictionary,CharactersPerMessage)
 SrcEncoder  = IL.SrcEncoder(ValidDictionary , SourceEncodeMethod)
-FEC = IL.ChannelEncoder(errorCorrection, 7 , 4/7)
+FEC = IL.ChannelEncoder(errorCorrection, FEC_blockSize , FEC_msgSize)
 
 ## DEFINE PARAMETERS ###########
 #CharSet = 'lowerCaseLiterals'
 #CharactersPerMessage = 3
 #SourceEncodeMethod = 'basic'
 #errorCorrection = 'HardHamming'
-FEC_Size = 7
-FEC_Rate = float(4)/7
+#FEC_Size = 7
+#FEC_Rate = float(4)/7
 
 
 ################################
 
 
 CharSet = RL.loadCharacterSet(CharSet)
-CD= RL.ChannelDecoder(errorCorrection,'HARD', FEC_Size, FEC_Rate)
+CD= RL.ChannelDecoder(errorCorrection,'HARD', FEC_blockSize, FEC_msgSize)
 SD = RL.sourceDecoder(CharSet, SourceEncodeMethod)
 
 while 1:
@@ -37,16 +41,17 @@ while 1:
 	SendBits = SrcEncoder.EncodeData(sendString)
 	print 'Sendbits: ', SendBits
 	EncBits = FEC.EncodeData(SendBits)
-	print 'EncBits:', EncBits
+	print 'EncBits:', (EncBits)
 	IntBits = FEC.interleave(EncBits)
-	print 'IntBITS: ', IntBits
+	print 'IntBITS: ', (IntBits)
 	Symbols  = IL.SymbolMapping(IntBits, 4)
-	print 'Symbols: ', Symbols
+	print 'Symbols: ', (Symbols)
+	
 	
 	Encoded = RL.Demapper(Symbols,4, 'HARD')
-	print 'Encoded: ', Encoded
+	print 'Encoded: ', (Encoded)
 	DeintBits = CD.de_interleave(Encoded)
-	print 'DEint Bits: ', DeintBits
+	print 'DEint Bits: ',(DeintBits)
 	Decoded = CD.Decode(DeintBits)
 	print 'Decoded: ', Decoded
 	String = SD.Decode(Decoded)
@@ -83,8 +88,8 @@ CharSet = 'lowerCaseLiterals'
 CharactersPerMessage = 4
 SourceEncodeMethod = 'basic'
 errorCorrection = 'HardHamming'
-FEC_Size = 7
-FEC_Rate = float(4)/7
+FEC_blockSize = 7
+FEC_msgSize = 4
 # Choose frequencies matching those on the sender side exactly from set:
 # [23.26, 23.81, 24.39, 25, 25.64, 26.36, 27.03, 27.78, 28.57, 29.41, 30.30, 31.25, 32.26, 33.33,
 #  34.48, 35.71, 37.04, 38.46 ]
@@ -116,12 +121,12 @@ Detector = RL.DetectionObject(DetectionMethod,TransmissionFrequenciesActual, Non
 Detector2 = RL.DetectionObject('CCA',TransmissionFrequenciesActual, None, Electrodes ,TimePerSymbolSeconds, DecisionType)
 
 CharSet = RL.loadCharacterSet(CharSet)
-CD= RL.ChannelDecoder(errorCorrection,'HARD',FEC_Size,FEC_Rate)
+CD= RL.ChannelDecoder(errorCorrection,'HARD',FEC_blockSize,FEC_msgSize)
 SD = RL.sourceDecoder(CharSet, SourceEncodeMethod)
 
 
-recordTime = RL.calculateRecvTime(TimePerSymbolSeconds, len(TransmissionFrequenciesActual), FEC_Size, FEC_Rate, CharactersPerMessage, len(CharSet))
-print(recordTime)
+recordTime = RL.calculateRecvTime(TimePerSymbolSeconds, len(TransmissionFrequenciesActual), FEC_blockSize, FEC_msgSize, CharactersPerMessage, len(CharSet))
+print '9999999: ', recordTime
 recordTime = int(recordTime)
 
 #while True:
