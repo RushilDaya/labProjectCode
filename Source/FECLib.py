@@ -23,7 +23,7 @@ class hammingCode:
 		self.synd = None
 		self.get_gen_mat()
 		
-		
+		print 'AAAA; ', self.codeRate
 		
 	def get_gen_mat(self):
 		if ((self.blockSize == 7) and (self.msgSize == 4)):
@@ -34,6 +34,14 @@ class hammingCode:
 			self.gen_mat = np.array([[1,1,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,1,1,0,0,1,0,0,0,0,0,0,0,0,0],[0,0,1,1,0,0,1,0,0,0,0,0,0,0,0],[1,1,0,1,0,0,0,1,0,0,0,0,0,0,0],[1,0,1,0,0,0,0,0,1,0,0,0,0,0,0],[0,1,0,1,0,0,0,0,0,1,0,0,0,0,0],[1,1,1,0,0,0,0,0,0,0,1,0,0,0,0],[0,1,1,1,0,0,0,0,0,0,0,1,0,0,0],[1,1,1,1,0,0,0,0,0,0,0,0,1,0,0],[1,0,1,1,0,0,0,0,0,0,0,0,0,1,0],[1,0,0,1,0,0,0,0,0,0,0,0,0,0,1]])
 			self.h_mat = np.array([[1,0,0,0,1,0,0,1,1,0,1,0,1,1,1],[0,1,0,0,1,1,0,1,0,1,1,1,1,0,0],[0,0,1,0,0,1,1,0,1,0,1,1,1,1,0],[0,0,0,1,0,0,1,1,0,1,0,1,1,1,1]])
 			self.synd = [0,0,0,0]
+		elif ((self.blockSize == 9) and (self.msgSize == 4)):
+			self.gen_mat = np.array([[1,0,0,0,1,0,1,0,1],[0,1,0,0,1,0,0,1,1],[0,0,1,0,0,1,1,0,1],[0,0,0,1,0,1,0,1,1]])
+			self.h_mat = np.array([[1,1,0,0,1,0,0,0,0],[0,0,1,1,0,1,0,0,0],[1,0,1,0,0,0,1,0,0],[0,1,0,1,0,0,0,1,0],[1,1,1,1,0,0,0,0,1]])
+			self.synd = [0,0,0,0,0]
+		elif ((self.blockSize == 5) and (self.msgSize == 3)):
+			self.gen_mat = np.array([[1,0,1,1,0],[1,1,0,1,0],[0,1,0,0,1]]) #np.array([[1,0,0,0,0,1],[0,1,0,0,0,1],[0,0,1,0,0,1],[0,0,0,1,0,1],[0,0,0,0,1,1]])
+			self.h_mat =  np.array([[1,0,0,1,0],[1,1,1,0,1]]) #np.array([1,1,1,1,1,1])
+			self.synd = [0,0]
 		else:
 			#raise Error('Hamming code Not Implemented')
 			self.blockSize = 1
@@ -71,16 +79,26 @@ class hammingCode:
 		if np.all([syn == self.synd]) == True:
 			if self.blockSize == 7:
 				return recv[0,:self.msgSize]
-			else:
+			elif self.blockSize == 15:
 				return recv[0,self.m:]
+			elif self.blockSize == 9:
+				return recv[0,:self.msgSize]
+			else:
+				return recv[0,:self.msgSize]
 		else:
 			for i in range(0,rows-1):
+				print '55555: ', recv
 				if np.all([syn == h_trans[i]]) == True:
 					recv[0,i] = (recv[0,i]+1)%2
 					
 			if self.blockSize == 7:
 				return recv[0,:self.msgSize]
+			elif self.blockSize == 15:
+				return recv[0,self.m:]
+			elif self.blockSize == 9:
+				return recv[0,:self.msgSize]
 			else:
+				print '66666: ', recv
 				return recv[0,self.m:]
 	
 	def HardHammingDecode(self,data):
@@ -89,7 +107,8 @@ class hammingCode:
 			data_np[0,i] = int(data[i])
 	
 	
-		syn = np.dot(data_np,self.h_mat.T)%2 
+		syn = np.dot(data_np,self.h_mat.T)%2
+		print 'SSSSS: ', syn 
 		dec_msg = self.correctErr(syn,data_np)
 	
 		dec_data = '' 
