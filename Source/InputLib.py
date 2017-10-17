@@ -109,6 +109,28 @@ class ChannelEncoder:
 			return fec.HardHammingEncode(data)
 		else:
 			raise nameError('Bad Method for Encoder')
+			
+	def interleave(self, message):
+	
+		x = len(message)
+		n_cols = self.max_cols(x)
+	
+		if x%n_cols != 0: 
+			raise ValueError("In interleave(), len(message)=%d is not a multiple of ncols=%d" % (len(message),n_cols))
+		
+		result = []
+		for i in range(0, n_cols):
+			result.extend(message[i:len(message):n_cols])
+    
+		return result
+		
+	def max_cols(self,x):
+		possible_cols = []
+		for i in range(1, x):
+			if x%i == 0:
+				possible_cols = possible_cols + [i]
+
+		return int(max(possible_cols))
 
 
 def SymbolMapping(data, numSymbols):

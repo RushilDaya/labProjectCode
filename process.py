@@ -1,4 +1,4 @@
-'''
+
 import Source.InputLib  as IL
 import time
 import math
@@ -38,18 +38,25 @@ while 1:
 	print 'Sendbits: ', SendBits
 	EncBits = FEC.EncodeData(SendBits)
 	print 'EncBits:', EncBits
-	Symbols  = IL.SymbolMapping(EncBits, 4)
+	IntBits = FEC.interleave(EncBits)
+	print 'IntBITS: ', IntBits
+	Symbols  = IL.SymbolMapping(IntBits, 4)
 	print 'Symbols: ', Symbols
 	
 	Encoded = RL.Demapper(Symbols,4, 'HARD')
 	print 'Encoded: ', Encoded
-	Decoded = CD.Decode(Encoded)
+	DeintBits = CD.de_interleave(Encoded)
+	print 'DEint Bits: ', DeintBits
+	Decoded = CD.Decode(DeintBits)
 	print 'Decoded: ', Decoded
 	String = SD.Decode(Decoded)
 	print 'String: ', String
 
-'''
 
+
+
+
+'''
 # Script which integrates the receiver side functionality.
 # the reciever Should be run with python 2.7
 
@@ -142,3 +149,5 @@ String2 = SD.Decode(Decoded2)
 
 #print(String)
 print('AAA: ', String2)
+
+'''

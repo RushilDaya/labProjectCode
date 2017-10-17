@@ -179,6 +179,27 @@ class ChannelDecoder:
 			return (String)
 		else:
 			raise NameError('Not Implemented')
+			
+	def de_interleave(self, message):
+		
+		x = len(message)
+		n_cols = self.min_cols(x)
+		
+		if x%n_cols != 0: 
+			raise ValueError("In interleave(), len(message)=%d is not a multiple of ncols=%d" % (x,n_cols))
+		
+		result = []
+		for i in range(0, n_cols):
+			result.extend(message[i:len(message):n_cols])
+    
+		return result
+		
+	def min_cols(self,x):
+		#possible_cols = []
+		for i in range(2, x):
+			if x%i == 0:
+				return i
+				
 
 
 def loadCharacterSet(SetName):
