@@ -10,6 +10,19 @@ from Emokit.emokit.python.emokit.packet import EmotivNewPacket
 
 import DetectionAlgorithms as DA
 
+
+def dataUpdate(OldData, newData):
+	for column in range(len(OldData[0])):
+		OldData[:,column] = numpy.roll(OldData[:,column], -len(newData))
+		OldData[len(OldData)-len(newData):len(OldData),column] = newData[:,column]
+	return (OldData)
+
+def movingAverageFilter(Data, newValue):
+	Data = numpy.roll(Data,1)
+	Data[0] = newValue
+	return([Data, sum(Data)/len(Data)])
+
+
 class Channel:
 	# the channel object has multiple variations to allow for more
 	# productive testing and operation
@@ -17,7 +30,7 @@ class Channel:
 	# has the option of additionally logging the data to a file for further analyis
 	# has the option of reading in data from a file this allows for strict
 	# algorithm comparision on the same set of data
-	def __init__(self, source, Electrodes, WriteToFile = False, ReadFile = None, useHeader = False, holdFreq = None, headerFreq =None, startThreshold=None):
+	def __init__(self, source, Electrodes, WriteToFile = False, ReadFile = None, useHeader = False, holdFreq = None, headerFreq =None, startThreshold=None, startThresholdRelative=None, crossoverThresholdRelative=None):
 		self.sampleRate = 128
 
 		self.fileWrite = WriteToFile
@@ -27,6 +40,8 @@ class Channel:
 		self.holdFreq = holdFreq
 		self.headerFreq = headerFreq
 		self.startThreshold = startThreshold
+		self.startThresholdRelative = startThresholdRelative
+		self.crossoverThresholdRelative = crossoverThresholdRelative
 
 		if useHeader == True :
 			if holdFreq == None or headerFreq == None or startThreshold == None:
@@ -49,8 +64,19 @@ class Channel:
 			raise NameError('Source Not Implemented')
 
 
-	def getDataBlock(self, recordTime, flushBuffer = True, restartFileRead = True): 
-		numSamples = recordTime*self.sampleRate
+	def getDataBlock(self, recordTime, flushBuffer = True, restartFileRead = True, UseNumSamples = 0, overrideRecord = False): 
+		# the overrideRecord is to prevent the channel logging recordings when this function in the header
+
+		if overrideRecord == True:
+			# ignore self.fileWrite in this call of the function
+			storeFileWrite = self.fileWrite
+			self.fileWrite = False
+
+		if UseNumSamples == 0:
+			numSamples = recordTime*self.sampleRate
+		else:
+			numSamples = UseNumSamples # a hard set of the number of samples to use
+
 		DataBlock = numpy.zeros((numSamples, len(self.ElectrodeList)))
 
 		if self.source == 'Emokit':
@@ -86,7 +112,13 @@ class Channel:
 			for i in range(len(DataBlock)):
 				writer.writerow(DataBlock[i])
 			File.close()
+
+		if overrideRecord == True:
+			self.fileWrite = storeFileWrite
+			
 		return(DataBlock)
+
+
 
 	def flushBuffer(self):
 		if self.source == 'Emokit':
@@ -118,8 +150,8 @@ class Channel:
 		blockSize = 512 #corresponds to the header Not the actual data stream size
 		DetectionMethod = 'PSDA'
 		ElectrodeForSync = 'O1'
-		relativeHeightForStart = 0.8
-		relativeHeightForHeaderDetection = 0.7
+		relativeHeightForStart = self.startThresholdRelative
+		relativeHeightForHeaderDetection = self.crossoverThresholdRelative
 		numHeaderBatches = 6 # how many blocks to record as part of the header
 		if DetectionMethod != 'PSDA':
 			raise NameError ('Sync Procedure not yet extended for None PSDA')
@@ -177,8 +209,75 @@ class Channel:
 			return (False)
 
 
+	def headerV2(self):
+		# this header only allows for the use of psda for now
+		# the O1 electrode is assumed to be the first electrode on the electrode list
+		updateSize = 128
+		fftSize = 512
+		ElectrodePositionInList = 0 # make sure the O1 electrode is first on the list
+		GazeThresholdAbs = self.startThreshold
+		GazeThresholdRelative = self.startThresholdRelative
+		HeaderThresholdRelative = self.crossoverThresholdRelative
+		smoothProb = numpy.zeros(4) # is the vector of the last 4 probabilitity readings of the hold Frequency
+		PeakDelay = 1.5 # the peak delay is lag induced by the moving average ( dependant on the size of the MA)
+		timeToStart = 8 # this is based on the time between the sender sending the start signal and data transmission (8 seconds)
 
+		self.flushBuffer()
+		state = 'Passive'
+		while state == 'Passive':
+			Data = self.shortDataCollect(fftSize, self.ElectrodeList[ElectrodePositionInList])
+			[Probabilities, absHeights] = DA.psdaGetForHeader(Data,[self.holdFreq, self.headerFreq],128, True)
+			print(absHeights)
+			print(Probabilities)
+			if Probabilities[0] > GazeThresholdRelative and absHeights[0] > GazeThresholdAbs:
+				state = 'Active'
+		print('Gaze Detected')
 
+		self.flushBuffer()
+		Data = numpy.zeros([fftSize,1])
+		DataFull = self.getDataBlock(0,flushBuffer = False, restartFileRead = False, UseNumSamples = fftSize, overrideRecord = True)
+		Data = DataFull
+		ThresholdReached = False
+		while ThresholdReached == False:
+			newDataFull = self.getDataBlock(0,flushBuffer = False, restartFileRead = False, UseNumSamples = updateSize, overrideRecord = True)
+			newData  = newDataFull
+			Data = dataUpdate(Data, newData)
+			[Probabilities, absHeights] = DA.psdaGetForHeader(Data[:,0],[self.holdFreq, self.headerFreq],128, True)
+			[smoothProb, currentValue] = movingAverageFilter(smoothProb,Probabilities[1])
+
+			if currentValue> HeaderThresholdRelative:
+					ThresholdReached = True
+					print ('Threshold Reached')
+			print(currentValue)
+		ThresholdDrop = False
+		PeakProbSet = numpy.zeros(10) # safety buffer
+		PeakProbSet[0] = currentValue
+		PeakTimeSet = numpy.zeros(10)
+		PeakTimeSet[0] = time.time()
+		count = 1
+		while ThresholdDrop == False:
+			newDataFull = self.getDataBlock(0,flushBuffer = False, restartFileRead = False, UseNumSamples = updateSize, overrideRecord = True)
+			newData  = newDataFull
+			Data = dataUpdate(Data, newData)
+			[Probabilities, absHeights] = DA.psdaGetForHeader(Data[:,0],[self.holdFreq, self.headerFreq],128, True)
+			[smoothProb, currentValue] = movingAverageFilter(smoothProb, Probabilities[1])
+			PeakProbSet[count] = currentValue
+			PeakTimeSet[count] = time.time()
+			if currentValue< HeaderThresholdRelative:
+					ThresholdDrop = True
+					print ('Threshold Reached')
+			print(currentValue)
+			print(time.time())
+			count +=1
+		print(PeakProbSet)
+		print(PeakTimeSet)
+		print('Max Value', max(PeakProbSet))
+		print('Time of Max', PeakTimeSet[PeakProbSet.argmax()] )
+		ptime = PeakTimeSet[PeakProbSet.argmax()]
+		currentTime = time.time()
+		time.sleep(timeToStart-(currentTime-ptime+PeakDelay))
+		print(time.time())
+		return(True)
 
 
 #### AUTO SYNC CODE END #####################################################
@@ -197,6 +296,8 @@ class Channel:
 				raise NameError ('Provide Channel Constructer with arguments when using HeaderBased Sync')
 			status = self.autoSync()
 			return(status)
+		elif action == 'HeaderV2':
+			self.headerV2()
 		else :
 			raise NameError ('invalid Action')
 

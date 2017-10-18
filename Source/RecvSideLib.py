@@ -233,13 +233,13 @@ class sourceDecoder:
 	def Decode(self,data):
 		splitData = breakString(data, self.CodeLength) ## this will disregard any bits added by the FEC to fill blocks
 		String = ""
-		try:
-			for elem in splitData:  
+		for elem in splitData:  
+			try:
 				String = String + self.alphabet[int(elem,2)]
-			return(String)
-		except IndexError:
-			print('One or more characters could not be decoded due to index error ')
-			return('XXXX')
+			except IndexError:
+				String = String + '*'
+		return(String)
+
 
 
 def calculateRecvTime(SymbolPeriod, NumSymbols, FEC_blockSize, FEC_msgSize, NumCharacters, AlphabetLength):
