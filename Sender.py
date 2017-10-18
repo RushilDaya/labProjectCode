@@ -35,7 +35,7 @@ ValidDictionary = IL.loadCharacterSet(CharSet)
 InputValidationObject = IL.InputValidation(ValidDictionary,CharactersPerMessage)
 SrcEncoder  = IL.SrcEncoder(ValidDictionary , SourceEncodeMethod)
 FEC = IL.ChannelEncoder(errorCorrection,7,4/7)
-Chan = IL.Channel('FixedFrequencyAndDuty',TransmissionFrequenciesIdeal,TimePerSymbolSeconds)
+Chan = IL.Channel('FixedFrequencyAndDuty',TransmissionFrequenciesIdeal,TimePerSymbolSeconds, True, 28.57,30.30)
 
 while True:
 	sendString = InputValidationObject.getInput()

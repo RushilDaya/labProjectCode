@@ -10,6 +10,18 @@ from Emokit.emokit.python.emokit.packet import EmotivNewPacket
 
 import DetectionAlgorithms as DA
 
+
+def dataUpdate(OldData, newData):
+	for column in range(len(OldData[0])):
+		OldData[:,column] = numpy.roll(OldData[:,column], -len(newData))
+		OldData[len(OldData)-len(newData):len(OldData),column] = newData[:,column]
+	return (OldData)
+
+def movingAverageFilter(Data, newValue):
+	Data = numpy.roll(Data,1)
+	Data[0] = newValue
+	return([Data, sum(Data)/len(Data)])
+
 class Channel:
 	# the channel object has multiple variations to allow for more
 	# productive testing and operation
@@ -49,8 +61,12 @@ class Channel:
 			raise NameError('Source Not Implemented')
 
 
-	def getDataBlock(self, recordTime, flushBuffer = True, restartFileRead = True): 
-		numSamples = recordTime*self.sampleRate
+	def getDataBlock(self, recordTime, flushBuffer = True, restartFileRead = True, UseNumSamples = 0): 
+		if UseNumSamples == 0:
+			numSamples = recordTime*self.sampleRate
+		else:
+			numSamples = UseNumSamples # a hard set of the number of samples to use
+
 		DataBlock = numpy.zeros((numSamples, len(self.ElectrodeList)))
 
 		if self.source == 'Emokit':
@@ -177,6 +193,82 @@ class Channel:
 			return (False)
 
 
+	def headerV2(self):
+		updateSize = 128
+		fftSize = 512
+		ElectrodePositionInList = 0 # make sure the O1 electrode is first on the list
+		GazeThresholdAbs = self.startThreshold
+		GazeThresholdRelative = 0.8
+		HeaderThresholdRelative = 0.6
+
+
+		self.flushBuffer()
+		state = 'Passive'
+		while state == 'Passive':
+			Data = self.shortDataCollect(fftSize, self.ElectrodeList[ElectrodePositionInList])
+			[Probabilities, absHeights] = DA.psdaGetForHeader(Data,[self.holdFreq, self.headerFreq],128, True)
+			print(absHeights)
+			print(Probabilities)
+			if Probabilities[0] > GazeThresholdRelative and absHeights[0] > GazeThresholdAbs:
+				state = 'Active'
+		print('Gaze Detected')
+
+		self.flushBuffer()
+		Data = numpy.zeros([fftSize,1])
+		DataFull = self.getDataBlock(0,flushBuffer = False, restartFileRead = False, UseNumSamples = fftSize)
+		Data = DataFull
+		ThresholdReached = False
+		smoothProb = numpy.zeros(4)
+		while ThresholdReached == False:
+			newDataFull = self.getDataBlock(0,flushBuffer = False, restartFileRead = False, UseNumSamples = updateSize)
+			newData  = newDataFull
+			Data = dataUpdate(Data, newData)
+			[Probabilities, absHeights] = DA.psdaGetForHeader(Data[:,0],[self.holdFreq, self.headerFreq],128, True)
+			[smoothProb, currentValue] = movingAverageFilter(smoothProb,Probabilities[1])
+
+			if currentValue> HeaderThresholdRelative:
+					ThresholdReached = True
+					print ('Threshold Reached')
+			print(currentValue)
+		ThresholdDrop = False
+		PeakProbSet = numpy.zeros(10) # safety buffer
+		PeakProbSet[0] = currentValue
+		PeakTimeSet = numpy.zeros(10)
+		PeakTimeSet[0] = time.time()
+		count = 1
+		while ThresholdDrop == False:
+			newDataFull = self.getDataBlock(0,flushBuffer = False, restartFileRead = False, UseNumSamples = updateSize)
+			newData  = newDataFull
+			Data = dataUpdate(Data, newData)
+			[Probabilities, absHeights] = DA.psdaGetForHeader(Data[:,0],[self.holdFreq, self.headerFreq],128, True)
+			[smoothProb, currentValue] = movingAverageFilter(smoothProb, Probabilities[1])
+			PeakProbSet[count] = currentValue
+			PeakTimeSet[count] = time.time()
+			if currentValue< HeaderThresholdRelative:
+					ThresholdDrop = True
+					print ('Threshold Reached')
+			print(currentValue)
+			print(time.time())
+			count +=1
+		print(PeakProbSet)
+		print(PeakTimeSet)
+		print('Max Value', max(PeakProbSet))
+		print('Time of Max', PeakTimeSet[PeakProbSet.argmax()] )
+		ptime = PeakTimeSet[PeakProbSet.argmax()]
+		currentTime = time.time()
+		time.sleep(8-(currentTime-ptime+1.5))
+		print(time.time())
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -197,6 +289,8 @@ class Channel:
 				raise NameError ('Provide Channel Constructer with arguments when using HeaderBased Sync')
 			status = self.autoSync()
 			return(status)
+		elif action == 'HeaderV2':
+			self.headerV2()
 		else :
 			raise NameError ('invalid Action')
 
