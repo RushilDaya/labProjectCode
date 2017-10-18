@@ -242,10 +242,10 @@ class Channel:
 			self.sendHeaderV2()
 		print('=== START MESSAGE ===')
 		print(time.time())
-		# for Symbol in SymbolList:
-		# 	self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.FrequencySet[Symbol]))
-		# 	time.sleep(self.SymbolPeriod)
-		# print('=== END MESSAGE ===')
+		for Symbol in SymbolList:
+			self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.FrequencySet[Symbol]))
+			time.sleep(self.SymbolPeriod)
+		print('=== END MESSAGE ===')
 		if self.header == False:
 			self.SerialObj.setFreqAndDuty(100, 0)	
 		else :

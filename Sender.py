@@ -28,7 +28,7 @@ errorCorrection = 'HardHamming'
 #  34.48, 35.71, 37.04, 38.46 ]
 TransmissionFrequenciesIdeal = [23.26, 25, 26.36, 27.78 ,28.57, 30.30, 31.25, 33.33]
 
-TimePerSymbolSeconds = 2
+TimePerSymbolSeconds = 4
 ###########################
 
 ValidDictionary = IL.loadCharacterSet(CharSet)
