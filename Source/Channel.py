@@ -209,9 +209,10 @@ class Channel:
 			return (False)
 
 
-	def headerV2(self):
+	#def headerV2(self):
 		# this header only allows for the use of psda for now
 		# the O1 electrode is assumed to be the first electrode on the electrode list
+	def gaze_detect(self):
 		updateSize = 128
 		fftSize = 512
 		ElectrodePositionInList = 0 # make sure the O1 electrode is first on the list
@@ -232,7 +233,19 @@ class Channel:
 			if Probabilities[0] > GazeThresholdRelative and absHeights[0] > GazeThresholdAbs:
 				state = 'Active'
 		print('Gaze Detected')
-
+		return True
+		
+	def threshold_detect(self):
+		updateSize = 128
+		fftSize = 512
+		ElectrodePositionInList = 0 # make sure the O1 electrode is first on the list
+		GazeThresholdAbs = self.startThreshold
+		GazeThresholdRelative = self.startThresholdRelative
+		HeaderThresholdRelative = self.crossoverThresholdRelative
+		smoothProb = numpy.zeros(4) # is the vector of the last 4 probabilitity readings of the hold Frequency
+		PeakDelay = 1.5 # the peak delay is lag induced by the moving average ( dependant on the size of the MA)
+		timeToStart = 8 # this is based on the time between the sender sending the start signal and data transmission (8 seconds)
+		
 		self.flushBuffer()
 		Data = numpy.zeros([fftSize,1])
 		DataFull = self.getDataBlock(0,flushBuffer = False, restartFileRead = False, UseNumSamples = fftSize, overrideRecord = True)
@@ -297,7 +310,8 @@ class Channel:
 			status = self.autoSync()
 			return(status)
 		elif action == 'HeaderV2':
-			self.headerV2()
+			self.gaze_detect()
+			self.threshold_detect()
 		else :
 			raise NameError ('invalid Action')
 

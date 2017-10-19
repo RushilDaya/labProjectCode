@@ -8,17 +8,16 @@ import Source.RecvSideLib as RL
 import Tkinter as tk 
 import tkMessageBox
 import ttk
-Font_type = ('Times New Roman', 12)
+Font_type = ('Times New Roman', 14)
 
 class RecvGUI(tk.Tk):
 	
 	def __init__(self, *args, **kwargs):
 		tk.Tk.__init__(self, *args, **kwargs)
 		self.container = tk.Frame(self, width=500, height=500)
-		self.container.pack(expand=True) #side="top", fill="both"
-		self.container.grid_rowconfigure(0, weight=1)
-		self.container.grid_columnconfigure(0, weight=1)
-
+		self.container.pack(expand=True) #, side="top") #, fill="both")
+		self.container.grid_rowconfigure(10, weight=1)
+		self.container.grid_columnconfigure(10, weight=1)
 		self.frames = {} #initialise array for app pages - start page, home page, send page
 		
 		frame = recvPage(self.container, self, 'no') #, self.connect) #, self.tcp_obj, self.pop3_obj)
@@ -33,6 +32,7 @@ class RecvGUI(tk.Tk):
 			frame = cont(self.container, self, new_instance)
 			self.frames[cont] = frame
 			frame.grid(row=0, column=0)
+			frame.pack(side='left')
 		else:
 			frame = self.frames[cont]
 	
@@ -44,19 +44,17 @@ class recvPage(tk.Frame):
 	counter = 0
 	
 	def __init__(self, main_class, controller, new_instance): 
-		#tk.Frame.__init__(self, main_class) 
-		#tk.Frame(width=800, height=800)
 		#All the widgets required for the receive page
 		self.create_objects()
 		tk.Frame.__init__(self, main_class) 
-		tk.Frame(width=800, height=800)
-		self.page_label = ttk.Label(self, text='BrainChannel - Receiver Side', font=('Times New Roman', 14))
-		self.page_label.grid(row=0, column=0)
+		#tk.Frame(width=1, height=1)
+		self.page_label = ttk.Label(self, text='BrainChannel - Receiver Side', font=('Times New Roman', 22))
+		self.page_label.grid(row=0, column=0,padx=30,pady=100)
 		self.recv_button = tk.Button(self, text="Receive", command=lambda:self.setup_receive(main_class))
-		self.recv_button.grid(row=5, column=0)
+		self.recv_button.grid(row=5, column=0,padx=30,pady=100)
 
-		self.gaze_detect = False
-		self.threshold_detect = False
+		#self.gaze_detect = False
+		#self.threshold_detect = False
 		
 		recvPage.counter += 1
 		
@@ -74,13 +72,16 @@ class recvPage(tk.Frame):
 		#self.dec_label.pack(pady=20, padx=20) #grid(row=3, column=0) #pack(pady=20, padx=20) #grid(row=2, column=0)
 		#   #pack(pady=10, padx=20) #grid(row=3, column=2) #
 		self.restart_button = ttk.Button(self, text="Receive Again", command=lambda:self.restart(main_class))
-	
+		self.gaze_detect = tk.Label(self, text="Gaze Detected",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
+		self.gaze_detect.grid(row=2, column=0, padx=30, pady=10)
+		self.threshold_detect = tk.Label(self, text="Threshold Detected",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
+		self.threshold_detect.grid(row=3, column=0, padx=30, pady=10)
 		self.recv_button.grid_remove()
-		self.symbols_label.grid(row=2, column=0)
+		self.symbols_label.grid(row=5, column=0, padx=5, pady=50)
 		self.recv_symbols.insert(0.0,'Hallllooo mf')
-		self.recv_symbols.grid(row=2, column=1)
-		self.dec_label.grid(row=4, column=0)
-		self.dec_msg.grid(row=4, column=1)
+		self.recv_symbols.grid(row=5, column=1, padx=5, pady=50)
+		self.dec_label.grid(row=6, column=0, padx=5, pady=50)
+		self.dec_msg.grid(row=6, column=1, padx=5, pady=50)
 		
 		self.run_receiver()
 			
@@ -132,8 +133,16 @@ class recvPage(tk.Frame):
 				NoisyBits += IntBits[i]
 	
 		print 'NoisyBits: ', NoisyBits
+		
+		#wait for bool to change colour
+		#if waitforStart:
+		self.set_gaze_detected()
+		self.set_threshold_detect()
+		
 		Symbols  = IL.SymbolMapping(NoisyBits, 4)
 		print 'Symbols: ', (Symbols)
+	
+		
 	
 		Encoded = RL.Demapper(Symbols,4, 'HARD')
 		print 'Encoded: ', (Encoded)
@@ -147,9 +156,16 @@ class recvPage(tk.Frame):
 		print 'String: ', String
 			
 			
-		self.restart_button.grid(row=5,column=0) #pack(pady=10, padx=20)
+		self.restart_button.grid(row=8,column=0) #pack(pady=10, padx=20)
+		
+	def set_gaze_detected(self):
+		self.gaze_detect = tk.Label(self, text="Gaze Detected",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic").grid(row=2, column=0)
+		
+	def set_threshold_detect(self):
+		self.threshold_detect = tk.Label(self, text="Threshold Detected",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic").grid(row=3, column=0)
 
 myGUI = RecvGUI()
+myGUI.geometry("600x600")
 myGUI.mainloop()
 
 '''
