@@ -172,7 +172,6 @@ class recvPage(tk.Frame):
 		self.dec_msg.insert(0.0,String)
 		print(String)
 			
-			
 		self.restart_button.grid(row=8,column=0) #pack(pady=10, padx=20)
 		
 	def set_gaze_detected(self):
