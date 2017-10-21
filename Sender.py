@@ -178,6 +178,7 @@ class sendPage(tk.Frame):
 		print time.time()
 		self.sending_msg = tk.Label(self, text="Sending Message...",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
 		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
+		self.main_class.update()
 		for symbol in Symbols:
 			fre = self.Chan.send(symbol)
 			self.sent_freq.insert(0.0, fre)
