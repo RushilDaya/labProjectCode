@@ -65,11 +65,7 @@ class recvPage(tk.Frame):
 		self.page_label.grid(row=0, column=0,padx=30,pady=100)
 		self.recv_button = tk.Button(self, text="Receive", command=lambda:self.setup_receive(main_class))
 		self.recv_button.grid(row=5, column=0,padx=30,pady=100)
-
-		#self.gaze_detect = False
-		#self.threshold_detect = False
-		
-		recvPage.counter += 1
+		self.main_class = main_class
 		
 	def setup_receive(self, main_class):
 		#tk.Frame.__init__(self, main_class) 
@@ -150,15 +146,17 @@ class recvPage(tk.Frame):
 	
 	def run_receiver(self):
 		
-		#if self.EEGChannel.waitForStart(self.syncMethod) == True:
-		#time.sleep(10)
+		self.main_class.update()
 		if self.syncMethod == 'HeaderV2':
 			if self.EEGChannel.gaze_detect():
 				self.set_gaze_detected()
+				self.main_class.update()
 			if self.EEGChannel.threshold_detect():
 				self.set_threshold_detect()
+				self.main_class.update()
 		else:
 			self.EEGChannel.waitForStart(self.syncMethod)
+			self.main_class.update()
 		
 		data = self.EEGChannel.getDataBlock(self.recordTime, self.FlushBuffer)
 		print 'DATA: ', data
@@ -166,13 +164,16 @@ class recvPage(tk.Frame):
 		print(Symbols)
 		self.recv_symbols.insert(0.0,Symbols)
 		Encoded = RL.Demapper(Symbols,len(self.TransmissionFrequenciesActual), self.DecisionType)
-		print(Encoded)
-		Decoded = self.CD.Decode(Encoded)
+		DeIntBits = self.CD.de_interleave()
+		print(DeIntBits)
+		Decoded = self.CD.Decode(DeIntBits)
 		String = self.SD.Decode(Decoded)
 		self.dec_msg.insert(0.0,String)
 		print(String)
-			
+		
+		
 		self.restart_button.grid(row=8,column=0) #pack(pady=10, padx=20)
+		self.main_class.update() 
 		
 	def set_gaze_detected(self):
 		self.gaze_detect = tk.Label(self, text="Gaze Detected",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic").grid(row=2, column=0)

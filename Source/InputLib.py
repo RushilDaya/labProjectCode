@@ -205,7 +205,7 @@ class Channel:
 	# refactor this to inheritance later
 	def __init__(self,ArdScript, UsedFrequencies, SymbolPeriod, header = False, holdFrequency =None, headerFrequency = None):
 		self.ArdScript = ArdScript
-		self.SerialObj  = serialCommObj('COM3',9600)
+		self.SerialObj  = serialCommObj('COM4',9600)
 		time.sleep(1)
 		self.f1 = holdFrequency
 		self.f2 = headerFrequency
@@ -219,6 +219,8 @@ class Channel:
 			raise NameError ('Channel Model unimplemented')
 		self.FrequencySet = UsedFrequencies
 		self.SymbolPeriod = SymbolPeriod
+		
+		self.count = 0
 
 	def setFrequencySetAndTime(self, newFreqs, newPeriod):
 		self.FrequencySet = newFreqs
@@ -261,16 +263,19 @@ class Channel:
 
 
 
-
-	def send(self,SymbolList):
-		if self.header == True :
-			self.sendHeaderV2()
-		print('=== START MESSAGE ===')
-		print(time.time())
-		for Symbol in SymbolList:
-			self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.FrequencySet[Symbol]))
-			time.sleep(self.SymbolPeriod)
-		print('=== END MESSAGE ===')
+	def send(self,Symbol):
+		#if self.header == True :
+		#	self.sendHeaderV2()
+		#print('=== START MESSAGE ===')
+		#print(time.time())
+		#for Symbol in SymbolList:
+		self.SerialObj.setUpDown(FD.SenderGetUpAndDown(self.FrequencySet[Symbol]))
+		time.sleep(self.SymbolPeriod)
+		#print('=== END MESSAGE ===')
+		#self.count = self.count +1
+		return self.FrequencySet[Symbol]
+		
+	def re_header(self):
 		if self.header == False:
 			self.SerialObj.setFreqAndDuty(100, 0)	
 		else :

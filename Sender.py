@@ -62,6 +62,7 @@ class sendPage(tk.Frame):
 		self.create_objects()
 		tk.Frame.__init__(self, main_class) 
 		#tk.Frame(width=1, height=1)
+		self.main_class = main_class
 		
 		self.setup_send(main_class)
 		
@@ -73,12 +74,18 @@ class sendPage(tk.Frame):
 		
 	def setup_send(self, main_class):
 		self.page_label = ttk.Label(self, text='BrainChannel - Sender Side', font=('Times New Roman', 22))
-		self.page_label.grid(row=0, column=0,padx=30,pady=100)
+		self.page_label.grid(row=0, column=0,padx=30,pady=30)
 		self.send_button = tk.Button(self, text="Send Message:", command=lambda:self.run_send())
-		self.send_button.grid(row=2, column=0,padx=5,pady=100)
+		self.send_button.grid(row=1, column=0,padx=0,pady=30)
 		self.send_msg = tk.StringVar()
 		self.msg_entry = ttk.Entry(self, textvariable=self.send_msg)
-		self.msg_entry.grid(row=2, column=1, padx=5, pady=20)
+		self.msg_entry.grid(row=1, column=1, padx=0, pady=30)
+		
+		self.sent_header = tk.Label(self, text="Header Sent",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
+		self.sent_header.grid(row=2, column=0, padx=30, pady=5)
+		self.sending_msg = tk.Label(self, text="Sending Message",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
+		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
+		
 		self.sentf_label = ttk.Label(self, text='Sent Frequencies/Symbols: ', font=Font_type)
 		self.sentf_label.grid(row=4, column=0, pady=20, padx=5)
 		self.sent_freq = tk.Text(self, width=35, height=1)
@@ -113,6 +120,7 @@ class sendPage(tk.Frame):
 		self.enc_label.grid_remove()
 		self.enc_bits.grid_remove()
 		self.restart_button.grid_remove()
+		self.sent_header.grid_remove()
 		
 		self.setup_send(main_class)
 		
@@ -142,7 +150,7 @@ class sendPage(tk.Frame):
 	def run_send(self):
 		
 		sendString = (self.send_msg.get()) #self.InputValidationObject.getInput()
-		print 'JJJJ:: ', (sendString)
+		#print 'JJJJ:: ', (sendString)
 		time.sleep(2)
 		SendBits = self.SrcEncoder.EncodeData(sendString)
 		print(SendBits)
@@ -150,18 +158,45 @@ class sendPage(tk.Frame):
 		EncBits = self.FEC.EncodeData(SendBits)
 		print(EncBits)
 		self.enc_bits.insert(0.0, EncBits)
-		Symbols  = IL.SymbolMapping(EncBits, len(self.TransmissionFrequenciesIdeal))
+		IntBits = self.FEC.interleave(EncBits)
+		
+		Symbols  = IL.SymbolMapping(IntBits, len(self.TransmissionFrequenciesIdeal))
 		print(Symbols)
 		self.symbols.insert(0.0, Symbols)
 		
-		#self.Chan.send(Symbols)
+		self.sent_header = tk.Label(self, text="Sending Header...",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
+		self.sent_header.grid(row=2, column=0, padx=30, pady=5)
+		self.main_class.update()
+		self.Chan.sendHeaderV2()
+		
+		
+		self.sent_header.grid_remove()
+		self.sent_header = tk.Label(self, text="Header Sent",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
+		self.sent_header.grid(row=2, column=0, padx=30, pady=5)
+		self.main_class.update()
+		
+		print time.time()
+		self.sending_msg = tk.Label(self, text="Sending Message...",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
+		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
+		for symbol in Symbols:
+			fre = self.Chan.send(symbol)
+			self.sent_freq.insert(0.0, fre)
+			self.main_class.update()
 			
-		self.restart_button.grid(row=2,column=0) #pack(pady=10, padx=20)
+		self.sending_msg.grid_remove()
+		self.sending_msg = tk.Label(self, text="Message Sent",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
+		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
+			
+		self.Chan.re_header()
+			
+		self.restart_button.grid(row=8,column=0) #pack(pady=10, padx=20)
 		
 
 
 
 myGUI = SendGUI()
 myGUI.geometry("600x600")
+#myGUI.update_idletasks() #  after(100, 'update')
+#myGUI.update()
 myGUI.mainloop()
 
