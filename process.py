@@ -5,72 +5,168 @@ import math
 import Source.Channel as CH
 import Source.RecvSideLib as RL 
 
-CharSet = 'lowerCaseLiterals'
-CharactersPerMessage = 7
-SourceEncodeMethod = 'basic'
-errorCorrection = 'HardHamming'
+import Tkinter as tk 
+import tkMessageBox
+import ttk
+Font_type = ('Times New Roman', 14)
 
-FEC_blockSize = 15
-FEC_msgSize = 11
-
-###########################
-
-ValidDictionary = IL.loadCharacterSet(CharSet)
-InputValidationObject = IL.InputValidation(ValidDictionary,CharactersPerMessage)
-SrcEncoder  = IL.SrcEncoder(ValidDictionary , SourceEncodeMethod)
-FEC = IL.ChannelEncoder(errorCorrection, FEC_blockSize , FEC_msgSize)
-
-## DEFINE PARAMETERS ###########
-#CharSet = 'lowerCaseLiterals'
-#CharactersPerMessage = 3
-#SourceEncodeMethod = 'basic'
-#errorCorrection = 'HardHamming'
-#FEC_Size = 7
-#FEC_Rate = float(4)/7
-
-
-################################
-
-
-CharSet = RL.loadCharacterSet(CharSet)
-CD= RL.ChannelDecoder(errorCorrection,'HARD', FEC_blockSize, FEC_msgSize)
-SD = RL.sourceDecoder(CharSet, SourceEncodeMethod)
-
-while 1:
-	sendString = InputValidationObject.getInput()
-	SendBits = SrcEncoder.EncodeData(sendString)
-	print 'Sendbits: ', SendBits
-	EncBits = FEC.EncodeData(SendBits)
-	print 'EncBits:', (EncBits)
-	IntBits = FEC.interleave(EncBits)
-	print 'IntBITS: ', (IntBits)
+class RecvGUI(tk.Tk):
 	
-	NoisyBits = ''
-	for i in range(0, len(IntBits)):
-		if i == 2:
-			NoisyBits += '1'
+	def __init__(self, *args, **kwargs):
+		tk.Tk.__init__(self, *args, **kwargs)
+		self.container = tk.Frame(self, width=500, height=500)
+		self.container.pack(expand=True) #, side="top") #, fill="both")
+		self.container.grid_rowconfigure(10, weight=1)
+		self.container.grid_columnconfigure(10, weight=1)
+		self.frames = {} #initialise array for app pages - start page, home page, send page
+		
+		frame = recvPage(self.container, self, 'no') #, self.connect) #, self.tcp_obj, self.pop3_obj)
+		self.frames[recvPage] = frame
+		frame.grid(row=0, column=0) #pack()
+		
+		self.renderFrame(recvPage, 'no')
+			
+		
+	def renderFrame(self,cont,new_instance): #, rend_no):
+		if new_instance == 'yes':  #need to know if a new instance of the class is required
+			frame = cont(self.container, self, new_instance)
+			self.frames[cont] = frame
+			frame.grid(row=0, column=0)
+			frame.pack(side='left')
 		else:
-			NoisyBits += IntBits[i]
+			frame = self.frames[cont]
 	
-	
-	print 'NoisyBits: ', NoisyBits
-	
-	Symbols  = IL.SymbolMapping(NoisyBits, 4)
-	print 'Symbols: ', len(Symbols)
-	
-	
-	Encoded = RL.Demapper(Symbols,4, 'HARD')
-	print 'Encoded: ', (Encoded)
-	DeintBits = CD.de_interleave(Encoded)
-	print 'DEint Bits: ',(DeintBits)
-	Decoded = CD.Decode(DeintBits)
-	print 'Decoded: ', Decoded
-	String = SD.Decode(Decoded)
-	print 'String: ', String
+		frame.tkraise() #check this command -> makes frame go to front
 
+#inheriting from Frame class of Tkinter	
+class recvPage(tk.Frame):
+	#class attribute to count number of times this page is returned to
+	counter = 0
+	
+	def __init__(self, main_class, controller, new_instance): 
+		#All the widgets required for the receive page
+		self.create_objects()
+		tk.Frame.__init__(self, main_class) 
+		#tk.Frame(width=1, height=1)
+		self.page_label = ttk.Label(self, text='BrainChannel - Receiver Side', font=('Times New Roman', 22))
+		self.page_label.grid(row=0, column=0,padx=30,pady=100)
+		self.recv_button = tk.Button(self, text="Receive", command=lambda:self.setup_receive(main_class))
+		self.recv_button.grid(row=5, column=0,padx=30,pady=100)
 
+		#self.gaze_detect = False
+		#self.threshold_detect = False
+		
+		recvPage.counter += 1
+		
+	def setup_receive(self, main_class):
+		#tk.Frame.__init__(self, main_class) 
+		#tk.Frame(width=800, height=800)
+		#pack(pady=30, padx=30)  #grid(row=0, column=0) #pack(pady=10, padx=10)
+		self.symbols_label = tk.Label(self, text='Received Symbols: ', font=Font_type)
+		#self.symbols_label.pack(pady=30, padx=20) #grid(row=2, column=0) #pack(pady=30, padx=20) #grid(row=1, column=0)
+		self.recv_symbols = tk.Text(self, width=35, height=1)
+		self.dec_msg = tk.Text(self, width=35, height=1)
+		#self.recv_symbols.insert(0.0,'Hallllooo mf')
+		#self.recv_symbols.pack(pady=10, padx=20) #grid(row=2, column=2) #pack(pady=10, padx=20) #grid(row=1, column=3)
+		self.dec_label = ttk.Label(self, text='Decoded Bits: ', font=Font_type)
+		#self.dec_label.pack(pady=20, padx=20) #grid(row=3, column=0) #pack(pady=20, padx=20) #grid(row=2, column=0)
+		#   #pack(pady=10, padx=20) #grid(row=3, column=2) #
+		self.restart_button = ttk.Button(self, text="Receive Again", command=lambda:self.restart(main_class))
+		self.gaze_detect = tk.Label(self, text="Gaze Detected",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
+		self.gaze_detect.grid(row=2, column=0, padx=30, pady=10)
+		self.threshold_detect = tk.Label(self, text="Threshold Detected",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
+		self.threshold_detect.grid(row=3, column=0, padx=30, pady=10)
+		self.recv_button.grid_remove()
+		self.symbols_label.grid(row=5, column=0, padx=5, pady=50)
+		self.recv_symbols.insert(0.0,'Hallllooo mf')
+		self.recv_symbols.grid(row=5, column=1, padx=5, pady=50)
+		self.dec_label.grid(row=6, column=0, padx=5, pady=50)
+		self.dec_msg.grid(row=6, column=1, padx=5, pady=50)
+		
+		self.run_receiver()
+			
+	def restart(self, main_class):
+		#self.page_label.pack_forget() #
+		self.symbols_label.grid_remove() #3pack_forget()
+		self.recv_symbols.grid_remove()
+		self.dec_label.grid_remove()
+		self.dec_msg.grid_remove()
+		self.restart_button.grid_remove()
+		
+		self.setup_receive(main_class)
+		
 
+	def create_objects(self):
+		self.CharSet = 'lowerCaseLiterals'
+		self.CharactersPerMessage = 7
+		self.SourceEncodeMethod = 'basic'
+		self.errorCorrection = 'HardHamming'
+		self.FEC_blockSize = 15
+		self.FEC_msgSize = 11
+###########################
+		self.ValidDictionary = IL.loadCharacterSet(self.CharSet)
+		self.InputValidationObject = IL.InputValidation(self.ValidDictionary,self.CharactersPerMessage)
+		self.SrcEncoder  = IL.SrcEncoder(self.ValidDictionary , self.SourceEncodeMethod)
+		self.FEC = IL.ChannelEncoder(self.errorCorrection, self.FEC_blockSize , self.FEC_msgSize)
+################################
+		self.CharSet = RL.loadCharacterSet(self.CharSet)
+		self.CD = RL.ChannelDecoder(self.errorCorrection,'HARD', self.FEC_blockSize, self.FEC_msgSize)
+		self.SD = RL.sourceDecoder(self.CharSet, self.SourceEncodeMethod)
+		
+		
+	def run_receiver(self):
+		
+		#while 1:
+		sendString = self.InputValidationObject.getInput()
+		SendBits = self.SrcEncoder.EncodeData(sendString)
+		#print 'Sendbits: ', SendBits
+		EncBits = self.FEC.EncodeData(SendBits)
+		#print 'EncBits:', (EncBits)
+		IntBits = self.FEC.interleave(EncBits)
+		#print 'IntBITS: ', (IntBits)
+	
+		NoisyBits = ''
+		for i in range(0, len(IntBits)):
+			if i == 2:
+				NoisyBits += '1'
+			else:
+				NoisyBits += IntBits[i]
+	
+		print 'NoisyBits: ', NoisyBits
+		
+		#wait for bool to change colour
+		#if waitforStart:
+		self.set_gaze_detected()
+		self.set_threshold_detect()
+		
+		Symbols  = IL.SymbolMapping(NoisyBits, 4)
+		print 'Symbols: ', (Symbols)
+	
+		
+	
+		Encoded = RL.Demapper(Symbols,4, 'HARD')
+		print 'Encoded: ', (Encoded)
+		self.encoded = Encoded
+		self.recv_symbols.insert(0.0,Encoded)
+		DeintBits = self.CD.de_interleave(Encoded)
+		print 'DEint Bits: ',(DeintBits)
+		Decoded = self.CD.Decode(DeintBits)
+		print 'Decoded: ', Decoded
+		String = self.SD.Decode(Decoded)
+		print 'String: ', String
+			
+			
+		self.restart_button.grid(row=8,column=0) #pack(pady=10, padx=20)
+		
+	def set_gaze_detected(self):
+		self.gaze_detect = tk.Label(self, text="Gaze Detected",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic").grid(row=2, column=0)
+		
+	def set_threshold_detect(self):
+		self.threshold_detect = tk.Label(self, text="Threshold Detected",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic").grid(row=3, column=0)
 
+myGUI = RecvGUI()
+myGUI.geometry("600x600")
+myGUI.mainloop()
 
 '''
 # Script which integrates the receiver side functionality.
