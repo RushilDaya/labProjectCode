@@ -11,6 +11,9 @@
 #		Send  raw data to detection algorithm get Prob data
 #		Decode the data
 #		Display the decoded Result
+import matplotlib
+matplotlib.use('TkAgg')
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 import math
 import time
 import Source.Channel as CH
@@ -22,6 +25,9 @@ import tkMessageBox
 import ttk
 Font_type = ('Times New Roman', 14)
 import time
+import matplotlib.pyplot as plt 
+import matplotlib.animation as animation
+import numpy
 
 class RecvGUI(tk.Tk):
 	
@@ -120,12 +126,12 @@ class recvPage(tk.Frame):
 		self.TransmissionFrequenciesIdeal = [23.26, 25, 26.36, 27.78 ,28.57, 30.30, 31.25, 33.33]
 		self.TimePerSymbolSeconds = 4
 
-		self.ChannelSource = 'File'
+		self.ChannelSource = 'Emokit'
 		self.FlushBuffer = True
 		self.Electrodes = ['O1','O2','P7','P8']
 		self.DetectionMethod = 'PSDA'
 		self.DecisionType = 'HARD'
-		self.syncMethod = 'KeyPress' #'HeaderV2'
+		self.syncMethod = 'HeaderV2' #'HeaderV2'
 		self.FileWrite = False
 		self.readFileName = '20171009-182912.csv'
 ###########################
@@ -146,6 +152,18 @@ class recvPage(tk.Frame):
 
 	
 	def run_receiver(self):
+
+		fig = plt.figure(figsize=(3,3))
+		ax = fig.add_axes([0.1,0.1,0.8,0.8])
+		canvas=FigureCanvasTkAgg(fig,master=self.main_class)
+		canvas.get_tk_widget().grid(row=8,column=0)
+		canvas.show()
+		time.sleep(1)
+
+		x_axis = numpy.linspace(0,64, (128*self.TimePerSymbolSeconds)/2+1 )
+		numBatches = int(self.recordTime/self.TimePerSymbolSeconds)
+		Data = numpy.zeros([self.recordTime*128, len(self.Electrodes)])
+
 		
 		self.main_class.update()
 		if self.syncMethod == 'HeaderV2':
@@ -159,9 +177,21 @@ class recvPage(tk.Frame):
 			self.EEGChannel.waitForStart(self.syncMethod)
 			self.main_class.update()
 		
-		data = self.EEGChannel.getDataBlock(self.recordTime, self.FlushBuffer)
-		print 'DATA: ', data
-		Symbols = self.Detector.getSymbols(data)
+		self.EEGChannel.flushBuffer()
+		for i in range(numBatches):
+			newData = self.EEGChannel.getDataBlock(self.TimePerSymbolSeconds, False)
+			Data = dataUpdate(Data, newData)
+			dataToPlot = getFFTs(newData)
+			ax.clear()
+			ax.plot(x_axis,dataToPlot[:,0])
+			canvas.draw()
+			time.sleep(0.001)
+			self.main_class.update()
+			print(time.time())
+
+
+		print 'DATA: ', Data
+		Symbols = self.Detector.getSymbols(Data)
 		print(Symbols)
 		self.recv_symbols.insert(0.0,Symbols)
 		Encoded = RL.Demapper(Symbols,len(self.TransmissionFrequenciesActual), self.DecisionType)
@@ -183,7 +213,29 @@ class recvPage(tk.Frame):
 	def set_threshold_detect(self):
 		self.threshold_detect = tk.Label(self, text="Threshold Detected",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic").grid(row=3, column=0)
 
+def dataUpdate(OldData, newData):
+	for column in range(len(OldData[0])):
+		OldData[:,column] = numpy.roll(OldData[:,column], -len(newData))
+		OldData[len(OldData)-len(newData):len(OldData),column] = newData[:,column]
+	return (OldData)
 
+def getFFTs(Data):
+	Hann = numpy.hanning(len(Data))
+	ffts = numpy.zeros([len(Data), len(Data[0])])
+	halfLength = len(Data)/2 + 1
+	for column in range(len(Data[0])):
+		ffts[:,column]=numpy.fft.fft(Hann*(numpy.transpose(Data[:,column]-numpy.mean(Data[:,column]))))
+		ffts[:,column]=numpy.abs(ffts[:,column])
+	return(ffts[0:halfLength,:])
+
+def getIndexes(frequencies, sampleSize):
+	returnSet = []
+	resolution = float(128)/(sampleSize)
+	for freq in frequencies:
+		index = int(round(freq/resolution))
+		returnSet = returnSet + [index]
+		print(index*resolution)
+	return(returnSet)
 
 myGUI = RecvGUI()
 myGUI.geometry("600x600")
