@@ -176,6 +176,7 @@ class sendPage(tk.Frame):
 		self.main_class.update()
 		
 		print time.time()
+		self.sending_msg.grid_remove()
 		self.sending_msg = tk.Label(self, text="Sending Message...",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
 		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
 		self.main_class.update()
