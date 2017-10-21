@@ -83,32 +83,35 @@ class sendPage(tk.Frame):
 		
 		self.sent_header = tk.Label(self, text="Header Sent",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
 		self.sent_header.grid(row=2, column=0, padx=30, pady=5)
-		self.sending_msg = tk.Label(self, text="Sending Message",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
-		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
+		self.sending_msg = tk.Label(self, text="Sending Symbols",fg = "red",bg = "black",font = "Helvetica 16 bold italic")
+		self.sending_msg.grid(row=2, column=1, padx=0, pady=5)
+		self.progress_label = ttk.Label(self, text='', font=('Times New Roman', 22))
+		self.progress_label.grid(row=2, column=2,padx=0,pady=5)
 		
-		self.sentf_label = ttk.Label(self, text='Sent Frequencies/Symbols: ', font=Font_type)
-		self.sentf_label.grid(row=4, column=0, pady=20, padx=5)
-		self.sent_freq = tk.Text(self, width=35, height=1)
-		self.sent_freq.grid(row=4, column=1)
 		self.symbols_label = ttk.Label(self, text='Symbols: ', font=Font_type)
-		self.symbols_label.grid(row=5,column=0, pady=20, padx=5)
+		self.symbols_label.grid(row=4,column=0, pady=20, padx=5)
 		self.symbols = tk.Text(self, width=35, height=1)
-		self.symbols.grid(row=5, column=1) 
+		self.symbols.grid(row=4, column=1) 
 		self.sentb_label = ttk.Label(self, text='Send Bits: ', font=Font_type)
-		self.sentb_label.grid(row=6,column=0,pady=20, padx=0)
-		self.send_bits = tk.Text(self, width=35, height=1)
-		self.send_bits.grid(row=6, column=1)
+		self.sentb_label.grid(row=5,column=0,pady=20, padx=0)
+		self.send_bits = tk.Text(self, width=50, height=1)
+		self.send_bits.grid(row=5, column=1)
 		self.enc_label = ttk.Label(self, text='Encoded Bits: ', font=Font_type)
-		self.enc_label.grid(row=7, column=0, pady=20, padx=0)
-		self.enc_bits = tk.Text(self, width=35, height=1)
-		self.enc_bits.grid(row=7, column=1)
+		self.enc_label.grid(row=6, column=0, pady=20, padx=0)
+		self.enc_bits = tk.Text(self, width=50, height=1)
+		self.enc_bits.grid(row=6, column=1)
+		self.sentf_label = ttk.Label(self, text='Sent Frequencies/Symbols: ', font=Font_type)
+		self.sentf_label.grid(row=7, column=0, pady=20, padx=5)
+		self.sent_freq = tk.Text(self, width=50, height=10)
+		self.sent_freq.grid(row=7, column=1)
 		
 		self.restart_button = tk.Button(self, text = 'Send Another Message',command=lambda:self.restart(main_class))
 
 			
 	def restart(self, main_class):
-		#self.page_label.pack_forget() #
-		self.page_label.grid_remove() #3pack_forget()
+		self.progress_label.grid_remove() #
+		self.sending_msg.grid_remove()
+		self.page_label.grid_remove() 
 		self.send_button.grid_remove()
 		self.msg_entry.grid_remove()
 		self.sentf_label.grid_remove()
@@ -164,11 +167,14 @@ class sendPage(tk.Frame):
 		print(Symbols)
 		self.symbols.insert(0.0, Symbols)
 		
+		num_syms = str(0)+'/'+str(len(Symbols))
+		self.progress_label = ttk.Label(self, text=num_syms, font=('Times New Roman', 22))
+		self.progress_label.grid(row=2, column=2,padx=0,pady=5)
+		
 		self.sent_header = tk.Label(self, text="Sending Header...",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
 		self.sent_header.grid(row=2, column=0, padx=30, pady=5)
 		self.main_class.update()
 		self.Chan.sendHeaderV2()
-		
 		
 		self.sent_header.grid_remove()
 		self.sent_header = tk.Label(self, text="Header Sent",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
@@ -177,21 +183,35 @@ class sendPage(tk.Frame):
 		
 		print time.time()
 		self.sending_msg.grid_remove()
-		self.sending_msg = tk.Label(self, text="Sending Message...",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
+		self.sending_msg = tk.Label(self, text="Sending Symbols...",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
 		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
 		self.main_class.update()
+		i = 1
 		for symbol in Symbols:
 			fre = self.Chan.send(symbol)
-			self.sent_freq.insert(0.0, fre)
+			self.sent_freq.insert(0.0, str(fre)+'\n')
+			
+			num_syms = str(i)+'/'+str(len(Symbols))
+			self.progress_label = ttk.Label(self, text=num_syms, font=('Times New Roman', 22))
+			self.progress_label.grid(row=2, column=2,padx=0,pady=5)
 			self.main_class.update()
+			i = i +1
+			
+		num_syms = str(len(Symbols))+'/'+str(len(Symbols))
+		self.progress_label = ttk.Label(self, text=num_syms, font=('Times New Roman', 22))
+		self.progress_label.grid(row=2, column=2,padx=0,pady=5)
 			
 		self.sending_msg.grid_remove()
+		self.progress_label.grid_remove()
+
 		self.sending_msg = tk.Label(self, text="Message Sent",fg = "light green",bg = "dark green",font = "Helvetica 16 bold italic")
-		self.sending_msg.grid(row=2, column=1, padx=30, pady=5)
-			
+		self.sending_msg.grid(row=8, column=0, padx=30, pady=5)
+		self.main_class.update()
+		
 		self.Chan.re_header()
-			
-		self.restart_button.grid(row=8,column=0) #pack(pady=10, padx=20)
+		
+		self.send_button.grid_remove()
+		self.restart_button.grid(row=8,column=1) #pack(pady=10, padx=20)
 		
 
 
