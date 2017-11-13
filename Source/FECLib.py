@@ -23,7 +23,7 @@ class hammingCode:
 		self.synd = None
 		self.get_gen_mat()
 		
-		print 'AAAA; ', self.codeRate
+		#print 'AAAA; ', self.codeRate
 		
 	def get_gen_mat(self):
 		if ((self.blockSize == 7) and (self.msgSize == 4)):
@@ -87,7 +87,7 @@ class hammingCode:
 				return recv[0,:self.msgSize]
 		else:
 			for i in range(0,rows-1):
-				print '55555: ', recv
+			#	print '55555: ', recv
 				if np.all([syn == h_trans[i]]) == True:
 					recv[0,i] = (recv[0,i]+1)%2
 					
@@ -98,7 +98,7 @@ class hammingCode:
 			elif self.blockSize == 9:
 				return recv[0,:self.msgSize]
 			else:
-				print '66666: ', recv
+			#	print '66666: ', recv
 				return recv[0,self.m:]
 	
 	def HardHammingDecode(self,data):
@@ -108,7 +108,7 @@ class hammingCode:
 	
 	
 		syn = np.dot(data_np,self.h_mat.T)%2
-		print 'SSSSS: ', syn 
+		#print 'SSSSS: ', syn 
 		dec_msg = self.correctErr(syn,data_np)
 	
 		dec_data = '' 

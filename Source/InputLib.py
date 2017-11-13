@@ -205,7 +205,7 @@ class Channel:
 	# refactor this to inheritance later
 	def __init__(self,ArdScript, UsedFrequencies, SymbolPeriod, header = False, holdFrequency =None, headerFrequency = None):
 		self.ArdScript = ArdScript
-		self.SerialObj  = serialCommObj('COM3',9600)
+		self.SerialObj  = serialCommObj('COM6',9600)
 		time.sleep(1)
 		self.f1 = holdFrequency
 		self.f2 = headerFrequency

@@ -64,6 +64,9 @@ class Channel:
 			raise NameError('Source Not Implemented')
 
 
+	def setFileName(self, directedName):
+		self.runFileName = directedName
+
 	def getDataBlock(self, recordTime, flushBuffer = True, restartFileRead = True, UseNumSamples = 0, overrideRecord = False): 
 		# the overrideRecord is to prevent the channel logging recordings when this function in the header
 
@@ -105,7 +108,8 @@ class Channel:
 
 
 		if self.fileWrite == True:
-			filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") +'.csv'
+	#		filename = datetime.datetime.now().strftime("%Y%m%d-%H%M%S") +'.csv'
+			filename = self.runFileName
 			File = open(filename, 'w')
 			writer = csv.writer(File)
 			writer.writerow(self.ElectrodeList)
