@@ -10,7 +10,7 @@ a = serialCommObj('COM6',9600)
 
 while True:
 	print('AA')
-	a.setFreqAndDuty(30,0.5)
+	a.setFreqAndDuty(28,0.5)
 	time.sleep(8)
 #	a.singleDutyPhase(27,'c')
 	time.sleep(8)
