@@ -19,7 +19,7 @@ import os
 import random
 import time
 import copy
-
+import json
 
 DEFAULT_PARAMETERS ={
 	"CHARACTER_SET": 'lowerCaseLiterals',
@@ -54,7 +54,10 @@ def getParameters(test_type):
 	for key in customParameters:
 		new_setting = raw_input( str(key)+' (' + str(customParameters[key]) + '): ')
 		if new_setting != '':
-			customParameters[key] = new_setting
+			try:
+				customParameters[key] = int(new_setting)
+			except:
+				customParameters[key] = int(new_setting)
 
     # these parameters must be hard set as they configure the different tests.
 	if test_type == "full_system":
@@ -105,7 +108,7 @@ def CreateFiles(username, testType):
 
 
 
-def RunReciever( data_file, results_file , config_parameters ):
+def RunReciever( data_file, results_file , config_parameters, test_option ):
 	# function which will execute a run of the emotiv reciever
 
 	channel = Channel.Channel(config_parameters["CHANNEL_SOURCE"], config_parameters["ELECTRODES"], config_parameters["FILE_WRITE"],\
@@ -123,7 +126,83 @@ def RunReciever( data_file, results_file , config_parameters ):
 	sourceDecoder = Reciever.sourceDecoder(characterSet,config_parameters["SOURCE_ENCODER"])
 
 
+	#calculate the record time
+	recordTime = Reciever.calculateRecvTime(config_parameters["TIME_PER_SYMBOL"],\
+										    len( config_parameters["TRANSMISSION_FREQUENCIES"] ),\
+										    config_parameters["FEC_BLOCK_SIZE"],\
+										    config_parameters["FEC_MESSAGE_SIZE"],\
+										    config_parameters["CHARACTERS_PER_MESSAGE"],\
+										    len(characterSet))
+	print('calculated record time is: '+ str(recordTime))
+
 	# need to now do the actual recording here
+	channel.setFileName(data_file)
+
+	if config_parameters["SYNC_METHOD"] == 'HeaderV2':
+		print('--- DETECTING GAZE ----')
+		channel.gaze_detect()
+		print('--- GAZE DETECTED ----')
+		channel.threshold_detect()
+		print('--- THRESHOLD DETECTED ----')
+	else:
+		channel.waitForStart(config_parameters["SYNC_METHOD"])
+
+
+	recordStartTime = time.time()
+	symbolsToCapture = int(float(recordTime)/float(config_parameters["TIME_PER_SYMBOL"]))
+	print("--- DATA RECORDING STARTED --- " + str(recordStartTime))
+	channel.flushBuffer()
+
+	symbolsCCA = []
+	symbolsPSDA = []
+	for symbol in range(symbolsToCapture):
+		print("Getting Symbol "+str(symbol)+'. . . .')
+		DataBlock = channel.getDataBlock(int(config_parameters["TIME_PER_SYMBOL"]),False)
+		print( 'Number of samples collected: ' + str(len(DataBlock)))
+
+		symbolsPSDA.append(detectorPSDA.getSymbols(DataBlock)[0])
+		symbolsCCA.append(detectorCCA.getSymbols(DataBlock)[0])
+		print('psda symbol vector :' + str(symbolsPSDA))
+		print('cca symbol vector :' +  str(symbolsCCA))
+
+	if int(recordTime) != 0:
+		intCCA =     Reciever.Demapper(symbolsCCA,  len(config_parameters["TRANSMISSION_FREQUENCIES"] ),'HARD')
+		intPSDA =    Reciever.Demapper(symbolsPSDA,len(config_parameters["TRANSMISSION_FREQUENCIES"] ),'HARD')
+		encodedCCA = channelDecoder.de_interleave(intCCA)
+		encodedPSDA =channelDecoder.de_interleave(intPSDA)
+		binaryCCA =  channelDecoder.Decode(encodedCCA)
+		binaryPSDA = channelDecoder.Decode(encodedPSDA)
+		StringCCA =  sourceDecoder.Decode(binaryCCA)
+		StringPSDA = sourceDecoder.Decode(binaryPSDA)
+		print(StringCCA)
+		print(StringPSDA)
+
+	successful = raw_input("Was this a successful run (Y/n): ")
+	comments = raw_input("Provide any comments on the trial here: \n")
+
+	results = {}
+	results["SUCCESSFUL"] = successful
+	results["COMMENTS"] = comments
+	results["CONFIGURATION"] = config_parameters
+	results["RECORD_START_TIME"] = recordStartTime
+
+	if test_option != 'protocol_only':
+		results["INTERLEAVED_CCA"]= intCCA
+		results["INTERLEAVED_PSDA"]= intPSDA 
+		results["ENCODED_CCA"]= encodedCCA
+		results["ENCODED_PSDA"]= encodedPSDA
+		results["BINARY_CCA"]= binaryCCA
+		results["BINARY_PSDA"]= binaryPSDA
+		results["STRING_PSDA"]= StringPSDA
+		results["STRING_CCA"]= StringCCA
+
+	print(results)
+	with open(results_file, 'w') as outfile:
+		 json.dump(results, outfile)
+
+
+#	saveResults(results_file, results )
+#	saveRawData(data_file, raw_data )
 
 
 
@@ -135,12 +214,12 @@ if __name__ =="__main__":
 		# setup routine:
 
 		name = raw_input('Participant Name: ').upper()
-		test_option = int(raw_input('Test Type: \n 1 - full system\n'))
-		if test_option not in range(len(TEST_OPTIONS)):
+		test_option = int(raw_input('Test Type: \n1 - full system\n2 - protocol only\n3 - transmission only\n'))
+		if test_option not in range(len(TEST_OPTIONS)+1):
 			print('invalid option selected')
 			continue
 		test_option = TEST_OPTIONS[test_option-1]
 		[csv_file_name, json_file_name, trial_id] = CreateFiles(name,test_option)
 		configuration_parameters = getParameters(test_option)
-		RunReciever( csv_file_name, json_file_name, configuration_parameters)
+		RunReciever( csv_file_name, json_file_name, configuration_parameters, test_option)
 

@@ -126,6 +126,7 @@ class Channel:
 
 	def flushBuffer(self):
 		if self.source == 'Emokit':
+			print('flushing Emotiv Buffer')
 			self.device.clear_queue()
 		else:
 			print('Warning: flush buffer has no effect on file source')
