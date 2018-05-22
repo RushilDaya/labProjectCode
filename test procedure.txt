@@ -1,9 +1,0 @@
-1. fit the device using Xavier
-2. Run the basic GUI sweeps to make sure that the user is correctly understanding the process
-3. Run as many full system tests as possible (min 6)
-4. Keep not of how many times a false gaze was detected and if a message was incorrectly detected.
-5. If the full system tests dont work for a person -- do manual tests: it still informs you the time delays :)
-
-wordList:
-
-
