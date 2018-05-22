@@ -20,6 +20,7 @@ import random
 import time
 import copy
 import json
+import csv
 
 DEFAULT_PARAMETERS ={
 	"CHARACTER_SET": 'lowerCaseLiterals',
@@ -34,7 +35,7 @@ DEFAULT_PARAMETERS ={
 	"ELECTRODES":['O1','O2','P7','P8'],
 	"DECISION_TYPE":'HARD',
 	"SYNC_METHOD": "HeaderV2",
-	"FILE_WRITE":True,
+	"FILE_WRITE":False,
 	"TRANSMISSION_FREQUENCIES" : [23.26, 25, 26.36, 27.78 ,28.57, 30.30, 31.25, 33.33]
 }
 
@@ -98,13 +99,15 @@ def CreateFiles(username, testType):
 	trial_id = str(random.randint(1000000000, 9000000000))
 	name_of_csv = path+'\\'+ username+'_trial_'+ trial_id +'.csv'
 	name_of_json = path+'\\' + username+'_trial_'+ trial_id +'.json'
+	name_of_sender_json = path+'\\' + username+'_trial_'+ trial_id+'_SENDER' +'.json'
 
 
 	open(name_of_json, 'w').close()
 	open(name_of_csv, 'w').close()
+	open(name_of_sender_json, 'w').close()
 
 	print('file creation completed')
-	return [name_of_csv, name_of_json, trial_id ]
+	return [name_of_csv, name_of_json, name_of_sender_json, trial_id ]
 
 
 
@@ -136,7 +139,7 @@ def RunReciever( data_file, results_file , config_parameters, test_option ):
 	print('calculated record time is: '+ str(recordTime))
 
 	# need to now do the actual recording here
-	channel.setFileName(data_file)
+	# channel.setFileName(data_file)
 
 	if config_parameters["SYNC_METHOD"] == 'HeaderV2':
 		print('--- DETECTING GAZE ----')
@@ -155,9 +158,11 @@ def RunReciever( data_file, results_file , config_parameters, test_option ):
 
 	symbolsCCA = []
 	symbolsPSDA = []
+	Data = numpy.zeros((0, len(config_parameters["ELECTRODES"])))
 	for symbol in range(symbolsToCapture):
 		print("Getting Symbol "+str(symbol)+'. . . .')
 		DataBlock = channel.getDataBlock(int(config_parameters["TIME_PER_SYMBOL"]),False)
+		Data = numpy.concatenate([Data, DataBlock])
 		print( 'Number of samples collected: ' + str(len(DataBlock)))
 
 		symbolsPSDA.append(detectorPSDA.getSymbols(DataBlock)[0])
@@ -174,8 +179,8 @@ def RunReciever( data_file, results_file , config_parameters, test_option ):
 		binaryPSDA = channelDecoder.Decode(encodedPSDA)
 		StringCCA =  sourceDecoder.Decode(binaryCCA)
 		StringPSDA = sourceDecoder.Decode(binaryPSDA)
-		print(StringCCA)
-		print(StringPSDA)
+		print('Message Recieved from the CCA reciever '+StringCCA)
+		print('Message Recieved from the PSDA reciever '+StringPSDA)
 
 	successful = raw_input("Was this a successful run (Y/n): ")
 	comments = raw_input("Provide any comments on the trial here: \n")
@@ -200,10 +205,25 @@ def RunReciever( data_file, results_file , config_parameters, test_option ):
 	with open(results_file, 'w') as outfile:
 		 json.dump(results, outfile)
 
+	with open(data_file,'w') as outfile:
+		outfile.write(Data)
 
-#	saveResults(results_file, results )
-#	saveRawData(data_file, raw_data )
+	data_file = open(data_file,'w')
+	writer = csv.writer(data_file)
+	for i in range(len(Data)):
+		writer.writerow(Data[i])
+	data_file.close()
 
+def cleanUpSenderFile():
+	messageFile = 'message_file.txt'
+	open(messageFile, 'w').close()
+
+def messageSender(file_name):
+	messageFile = 'message_file.txt'
+	with open(messageFile,'w') as outfile:
+		outfile.write(file_name)
+	print('Message written to communication File')
+	raw_input('Press Enter once the reciever has obtained the message')
 
 
 if __name__ =="__main__":
@@ -212,14 +232,15 @@ if __name__ =="__main__":
 
 	while True:
 		# setup routine:
-
+		cleanUpSenderFile()
 		name = raw_input('Participant Name: ').upper()
 		test_option = int(raw_input('Test Type: \n1 - full system\n2 - protocol only\n3 - transmission only\n'))
 		if test_option not in range(len(TEST_OPTIONS)+1):
 			print('invalid option selected')
 			continue
 		test_option = TEST_OPTIONS[test_option-1]
-		[csv_file_name, json_file_name, trial_id] = CreateFiles(name,test_option)
+		[csv_file_name, json_file_name, name_of_sender_file ,trial_id] = CreateFiles(name,test_option)
+		messageSender(name_of_sender_file)
 		configuration_parameters = getParameters(test_option)
 		RunReciever( csv_file_name, json_file_name, configuration_parameters, test_option)
 
