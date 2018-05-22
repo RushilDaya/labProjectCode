@@ -1,7 +1,8 @@
 import Source.InputLib as Sender
 import time
 import os
-import Source.TestLib as TestLib
+import Source.TESTLIB as TestLib
+import json
 
 DEFAULT_PARAMETERS ={
 	"CHARACTER_SET": 'lowerCaseLiterals',
@@ -29,6 +30,7 @@ START_THRESHOLD = 300
 START_THRESHOLD_RELATIVE = 0.8
 
 def getParameters(test_type):
+	print(test_type)
 	customParameters = DEFAULT_PARAMETERS.copy()
 	print('Set System Parameters:\n')
 	for key in customParameters:
@@ -63,7 +65,7 @@ def RunSender( file_name , config_parameters, test_option ):
 		sendHeader = False
 
 	characterSet =  Sender.loadCharacterSet(config_parameters["CHARACTER_SET"])
-	sourceEncoder = Sender.srcEncoder(characterSet, config_parameters["SOURCE_ENCODER"])
+	sourceEncoder = Sender.SrcEncoder(characterSet, config_parameters["SOURCE_ENCODER"])
 
 	channelEncoder = Sender.ChannelEncoder(config_parameters["ERROR_CORRECTION"],\
 										   config_parameters["FEC_BLOCK_SIZE"],\
@@ -87,6 +89,7 @@ def RunSender( file_name , config_parameters, test_option ):
 		symbols = Sender.SymbolMapping(intBits, len(config_parameters["TRANSMISSION_FREQUENCIES"]))
 		print("Symbols to Transmit "+str(symbols))
 
+	raw_input("ready ... press Enter to Start")
 	if sendHeader:
 		channel.sendHeaderV2()
 	sendStartTime = time.time()
@@ -100,8 +103,9 @@ def RunSender( file_name , config_parameters, test_option ):
 	results["SEND_START_TIME"] = sendStartTime
 
 	if test_option != 'protocol_only':
+		results["SENT_SYMBOLS"]=symbols
 		results["INTERLEAVED_BITS"]= intBits
-		results["ENCODED_BITS"]= encBits
+		results["ENCODED_BITS"]= encodedBits
 		results["BINARY_MESSAGE"]= sendBits
 		results["STRING_MESSAGE"]= message
 
@@ -129,6 +133,7 @@ if __name__ =="__main__":
 			print('invalid option selected')
 			continue
 		file_name = getFile()
+		test_option = TEST_OPTIONS[test_option-1]
 		configuration_parameters = getParameters(test_option)
 		RunSender( file_name, configuration_parameters, test_option)
 

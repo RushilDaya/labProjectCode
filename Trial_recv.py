@@ -140,7 +140,7 @@ def RunReciever( data_file, results_file , config_parameters, test_option ):
 
 	# need to now do the actual recording here
 	# channel.setFileName(data_file)
-
+	raw_input("ready ... press Enter to Start")
 	if config_parameters["SYNC_METHOD"] == 'HeaderV2':
 		print('--- DETECTING GAZE ----')
 		channel.gaze_detect()
